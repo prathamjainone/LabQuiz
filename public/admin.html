@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LabQuiz - Admin Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>LabQuiz Admin Dashboard</h1>
+            <div class="server-info">
+                <p>Server: <span id="serverUrl"></span></p>
+            </div>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="quiz-builder">Quiz Builder</button>
+            <button class="tab-btn" data-tab="game-control">Game Control</button>
+        </div>
+
+        <!-- Quiz Builder Tab -->
+        <div id="quiz-builder" class="tab-content active">
+            <div class="quiz-section">
+                <h2>Create New Quiz</h2>
+                <div class="form-group">
+                    <label for="quizName">Quiz Name:</label>
+                    <input type="text" id="quizName" placeholder="e.g., OOP Concepts Quiz">
+                </div>
+                <button id="createQuizBtn" class="btn btn-primary">Create Quiz</button>
+            </div>
+
+            <div class="quiz-section" id="quizListSection" style="display: none;">
+                <h2>Select Quiz</h2>
+                <select id="quizSelect" class="form-control">
+                    <option value="">-- Select a Quiz --</option>
+                </select>
+                <button id="loadQuizBtn" class="btn btn-secondary">Load Quiz</button>
+            </div>
+
+            <div class="quiz-section" id="questionBuilder" style="display: none;">
+                <h2>Add Question</h2>
+                
+                <div class="form-group">
+                    <label for="questionType">Question Type:</label>
+                    <select id="questionType" class="form-control">
+                        <option value="mcq">Multiple Choice (MCQ)</option>
+                        <option value="multi_select">Multi-Select</option>
+                        <option value="match_following">Match the Following</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="questionText">Question Text:</label>
+                    <textarea id="questionText" class="form-control" rows="3" placeholder="Enter your question..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="questionTimer">Timer (seconds):</label>
+                    <input type="number" id="questionTimer" class="form-control" value="30" min="5" max="300">
+                </div>
+
+                <!-- MCQ Fields -->
+                <div id="mcqFields" class="question-type-fields">
+                    <div class="form-group">
+                        <label>Options:</label>
+                        <div id="mcqOptions">
+                            <div class="option-row">
+                                <input type="text" class="option-input" placeholder="Option A">
+                                <button class="btn-remove-option">×</button>
+                            </div>
+                            <div class="option-row">
+                                <input type="text" class="option-input" placeholder="Option B">
+                                <button class="btn-remove-option">×</button>
+                            </div>
+                        </div>
+                        <button id="addMcqOption" class="btn btn-small">+ Add Option</button>
+                    </div>
+                    <div class="form-group">
+                        <label for="mcqCorrect">Correct Answer:</label>
+                        <select id="mcqCorrect" class="form-control"></select>
+                    </div>
+                </div>
+
+                <!-- Multi-Select Fields -->
+                <div id="multiSelectFields" class="question-type-fields" style="display: none;">
+                    <div class="form-group">
+                        <label>Options:</label>
+                        <div id="multiSelectOptions">
+                            <div class="option-row">
+                                <input type="text" class="option-input" placeholder="Option A">
+                                <input type="checkbox" class="correct-checkbox">
+                                <label>Correct</label>
+                                <button class="btn-remove-option">×</button>
+                            </div>
+                            <div class="option-row">
+                                <input type="text" class="option-input" placeholder="Option B">
+                                <input type="checkbox" class="correct-checkbox">
+                                <label>Correct</label>
+                                <button class="btn-remove-option">×</button>
+                            </div>
+                        </div>
+                        <button id="addMultiSelectOption" class="btn btn-small">+ Add Option</button>
+                    </div>
+                </div>
+
+                <!-- Match Following Fields -->
+                <div id="matchFields" class="question-type-fields" style="display: none;">
+                    <div class="form-group">
+                        <label>Left Column Items:</label>
+                        <div id="leftItems">
+                            <div class="match-item-row">
+                                <input type="text" class="match-input" placeholder="Left item">
+                                <button class="btn-remove-item">×</button>
+                            </div>
+                        </div>
+                        <button id="addLeftItem" class="btn btn-small">+ Add Left Item</button>
+                    </div>
+                    <div class="form-group">
+                        <label>Right Column Items:</label>
+                        <div id="rightItems">
+                            <div class="match-item-row">
+                                <input type="text" class="match-input" placeholder="Right item">
+                                <button class="btn-remove-item">×</button>
+                            </div>
+                        </div>
+                        <button id="addRightItem" class="btn btn-small">+ Add Right Item</button>
+                    </div>
+                    <div class="form-group">
+                        <label>Match Pairs (Select correct matches):</label>
+                        <div id="matchPairs"></div>
+                    </div>
+                </div>
+
+                <!-- Code Input -->
+                <div class="form-group">
+                    <label for="questionCode">Code Snippet (optional):</label>
+                    <textarea id="questionCode" class="form-control code-input" rows="10" placeholder="Paste code here..."></textarea>
+                </div>
+
+                <!-- Image Upload -->
+                <div class="form-group">
+                    <label for="questionImage">Image (optional):</label>
+                    <input type="file" id="questionImage" accept="image/*">
+                    <div id="imagePreview" class="image-preview"></div>
+                </div>
+
+                <button id="addQuestionBtn" class="btn btn-primary">Add Question</button>
+            </div>
+
+            <div class="quiz-section" id="questionsList" style="display: none;">
+                <h2>Questions in Quiz</h2>
+                <div id="questionsContainer"></div>
+            </div>
+        </div>
+
+        <!-- Game Control Tab -->
+        <div id="game-control" class="tab-content">
+            <div class="game-control-panel">
+                <h2>Game Control</h2>
+                
+                <div class="lobby-section">
+                    <h3>Lobby</h3>
+                    <div id="playersList" class="players-list">
+                        <p class="empty-state">No players joined yet</p>
+                    </div>
+                    <div class="control-buttons">
+                        <button id="startGameBtn" class="btn btn-success" disabled>Start Game</button>
+                        <button id="pauseGameBtn" class="btn btn-warning" disabled>Pause</button>
+                        <button id="resumeGameBtn" class="btn btn-success" disabled>Resume</button>
+                    </div>
+                </div>
+
+                <div class="game-status-section">
+                    <h3>Game Status</h3>
+                    <div id="gameStatus" class="status-display">
+                        <p>Status: <span id="statusText">Lobby</span></p>
+                        <p>Question: <span id="currentQuestion">-</span> / <span id="totalQuestions">-</span></p>
+                        <p>Time Remaining: <span id="timeRemaining">-</span>s</p>
+                    </div>
+                </div>
+
+                <div class="leaderboard-section">
+                    <h3>Leaderboard</h3>
+                    <div id="leaderboard" class="leaderboard">
+                        <p class="empty-state">No scores yet</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>
+

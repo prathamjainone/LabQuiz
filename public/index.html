@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LabQuiz - Student</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+</head>
+<body>
+    <!-- Join Screen -->
+    <div id="joinScreen" class="screen active">
+        <div class="join-container">
+            <h1>LabQuiz</h1>
+            <p class="subtitle">Enter your nickname to join</p>
+            <div class="form-group">
+                <input type="text" id="nicknameInput" class="form-control" placeholder="Your Nickname" maxlength="20" autofocus>
+            </div>
+            <button id="joinBtn" class="btn btn-primary btn-large">Join Game</button>
+            <p id="errorMessage" class="error-message"></p>
+        </div>
+    </div>
+
+    <!-- Waiting Screen -->
+    <div id="waitingScreen" class="screen">
+        <div class="waiting-container">
+            <h2>Waiting for game to start...</h2>
+            <p>You're in the lobby. The admin will start the game soon.</p>
+            <div class="spinner"></div>
+        </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="gameScreen" class="screen">
+        <div class="game-header">
+            <div class="question-info">
+                <span id="questionNumber">Question 1</span>
+                <span id="totalQuestions">/ 10</span>
+            </div>
+            <div class="timer-container">
+                <div class="timer-bar">
+                    <div id="timerProgress" class="timer-progress"></div>
+                </div>
+                <span id="timerText">30s</span>
+            </div>
+        </div>
+
+        <div class="game-content">
+            <div id="questionContainer" class="question-container">
+                <!-- Question content will be injected here -->
+            </div>
+        </div>
+
+        <div class="game-footer">
+            <div id="answerStatus" class="answer-status"></div>
+        </div>
+    </div>
+
+    <!-- Leaderboard Screen -->
+    <div id="leaderboardScreen" class="screen">
+        <div class="leaderboard-container">
+            <h2>Leaderboard</h2>
+            <div id="leaderboardList" class="leaderboard-list">
+                <!-- Leaderboard will be injected here -->
+            </div>
+            <p class="waiting-text">Next question starting soon...</p>
+        </div>
+    </div>
+
+    <!-- Final Results Screen -->
+    <div id="finalScreen" class="screen">
+        <div class="final-container">
+            <h2>Game Finished!</h2>
+            <h3>Final Leaderboard</h3>
+            <div id="finalLeaderboard" class="leaderboard-list">
+                <!-- Final leaderboard will be injected here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script src="student.js"></script>
+</body>
+</html>
+
