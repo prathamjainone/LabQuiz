@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LabQuiz - Admin Dashboard</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
 </head>
 <body>
     <div class="container">
@@ -17,38 +17,40 @@
         </header>
 
         <div class="tabs">
-            <button class="tab-btn active" data-tab="quiz-builder">Quiz Builder</button>
+            <button class="tab-btn active" data-tab="question-management">Question Management</button>
             <button class="tab-btn" data-tab="game-control">Game Control</button>
         </div>
 
-        <!-- Quiz Builder Tab -->
-        <div id="quiz-builder" class="tab-content active">
+        <!-- Question Management Tab -->
+        <div id="question-management" class="tab-content active">
             <div class="quiz-section">
-                <h2>Create New Quiz</h2>
+                <h2>Bulk Upload (CSV)</h2>
                 <div class="form-group">
-                    <label for="quizName">Quiz Name:</label>
-                    <input type="text" id="quizName" placeholder="e.g., OOP Concepts Quiz">
+                    <label for="csvFile">Upload CSV File:</label>
+                    <input type="file" id="csvFile" accept=".csv" class="form-control">
+                    <small>CSV Format: type, question, option1, option2, option3, option4, correctAnswer, timer, codeSnippet</small>
                 </div>
-                <button id="createQuizBtn" class="btn btn-primary">Create Quiz</button>
+                <div class="form-group">
+                    <label>
+                        <input type="radio" name="uploadMode" value="append" checked> Append to existing questions
+                    </label>
+                    <label>
+                        <input type="radio" name="uploadMode" value="replace"> Replace all questions
+                    </label>
+                </div>
+                <button id="uploadCsvBtn" class="btn btn-primary">Upload CSV</button>
+                <div id="csvUploadStatus" class="status-message"></div>
             </div>
 
-            <div class="quiz-section" id="quizListSection" style="display: none;">
-                <h2>Select Quiz</h2>
-                <select id="quizSelect" class="form-control">
-                    <option value="">-- Select a Quiz --</option>
-                </select>
-                <button id="loadQuizBtn" class="btn btn-secondary">Load Quiz</button>
-            </div>
-
-            <div class="quiz-section" id="questionBuilder" style="display: none;">
-                <h2>Add Question</h2>
+            <div class="quiz-section">
+                <h2>Add Single Question</h2>
                 
                 <div class="form-group">
                     <label for="questionType">Question Type:</label>
                     <select id="questionType" class="form-control">
                         <option value="mcq">Multiple Choice (MCQ)</option>
-                        <option value="multi_select">Multi-Select</option>
-                        <option value="match_following">Match the Following</option>
+                        <option value="code">Code Snippet</option>
+                        <option value="match">Match the Following</option>
                     </select>
                 </div>
 
@@ -62,47 +64,41 @@
                     <input type="number" id="questionTimer" class="form-control" value="30" min="5" max="300">
                 </div>
 
-                <!-- MCQ Fields -->
+                <!-- MCQ/Code Fields -->
                 <div id="mcqFields" class="question-type-fields">
                     <div class="form-group">
-                        <label>Options:</label>
+                        <label>Options (4 required):</label>
                         <div id="mcqOptions">
                             <div class="option-row">
                                 <input type="text" class="option-input" placeholder="Option A">
-                                <button class="btn-remove-option">×</button>
                             </div>
                             <div class="option-row">
                                 <input type="text" class="option-input" placeholder="Option B">
-                                <button class="btn-remove-option">×</button>
+                            </div>
+                            <div class="option-row">
+                                <input type="text" class="option-input" placeholder="Option C">
+                            </div>
+                            <div class="option-row">
+                                <input type="text" class="option-input" placeholder="Option D">
                             </div>
                         </div>
-                        <button id="addMcqOption" class="btn btn-small">+ Add Option</button>
                     </div>
                     <div class="form-group">
-                        <label for="mcqCorrect">Correct Answer:</label>
-                        <select id="mcqCorrect" class="form-control"></select>
+                        <label for="mcqCorrect">Correct Answer (Index 0-3):</label>
+                        <select id="mcqCorrect" class="form-control">
+                            <option value="0">A (Index 0)</option>
+                            <option value="1">B (Index 1)</option>
+                            <option value="2">C (Index 2)</option>
+                            <option value="3">D (Index 3)</option>
+                        </select>
                     </div>
                 </div>
 
-                <!-- Multi-Select Fields -->
-                <div id="multiSelectFields" class="question-type-fields" style="display: none;">
+                <!-- Code Snippet Field -->
+                <div id="codeFields" class="question-type-fields" style="display: none;">
                     <div class="form-group">
-                        <label>Options:</label>
-                        <div id="multiSelectOptions">
-                            <div class="option-row">
-                                <input type="text" class="option-input" placeholder="Option A">
-                                <input type="checkbox" class="correct-checkbox">
-                                <label>Correct</label>
-                                <button class="btn-remove-option">×</button>
-                            </div>
-                            <div class="option-row">
-                                <input type="text" class="option-input" placeholder="Option B">
-                                <input type="checkbox" class="correct-checkbox">
-                                <label>Correct</label>
-                                <button class="btn-remove-option">×</button>
-                            </div>
-                        </div>
-                        <button id="addMultiSelectOption" class="btn btn-small">+ Add Option</button>
+                        <label for="codeSnippet">Code Snippet:</label>
+                        <textarea id="codeSnippet" class="form-control code-input" rows="15" placeholder="Paste code here..."></textarea>
                     </div>
                 </div>
 
@@ -134,25 +130,14 @@
                     </div>
                 </div>
 
-                <!-- Code Input -->
-                <div class="form-group">
-                    <label for="questionCode">Code Snippet (optional):</label>
-                    <textarea id="questionCode" class="form-control code-input" rows="10" placeholder="Paste code here..."></textarea>
-                </div>
-
-                <!-- Image Upload -->
-                <div class="form-group">
-                    <label for="questionImage">Image (optional):</label>
-                    <input type="file" id="questionImage" accept="image/*">
-                    <div id="imagePreview" class="image-preview"></div>
-                </div>
-
                 <button id="addQuestionBtn" class="btn btn-primary">Add Question</button>
             </div>
 
-            <div class="quiz-section" id="questionsList" style="display: none;">
-                <h2>Questions in Quiz</h2>
-                <div id="questionsContainer"></div>
+            <div class="quiz-section">
+                <h2>Current Questions</h2>
+                <div id="questionsList" class="questions-list">
+                    <p class="empty-state">No questions available</p>
+                </div>
             </div>
         </div>
 
@@ -168,8 +153,8 @@
                     </div>
                     <div class="control-buttons">
                         <button id="startGameBtn" class="btn btn-success" disabled>Start Game</button>
-                        <button id="pauseGameBtn" class="btn btn-warning" disabled>Pause</button>
-                        <button id="resumeGameBtn" class="btn btn-success" disabled>Resume</button>
+                        <button id="nextQuestionBtn" class="btn btn-warning" disabled>Next Question</button>
+                        <button id="forceStopBtn" class="btn btn-danger" disabled>Force Stop</button>
                     </div>
                 </div>
 
@@ -198,4 +183,3 @@
     <script src="admin.js"></script>
 </body>
 </html>
-

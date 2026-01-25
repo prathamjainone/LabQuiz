@@ -1,14 +1,13 @@
 const socket = io();
-let currentQuiz = null;
-let currentQuizId = null;
-let uploadedImageUrl = null;
+let currentQuestions = [];
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('serverUrl').textContent = window.location.origin;
-    loadQuizzes();
     setupEventListeners();
     setupSocketListeners();
+    // Load questions silently on startup (no alert)
+    loadQuestionsSilent();
 });
 
 // Tab switching
@@ -23,18 +22,14 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
 // Event Listeners
 function setupEventListeners() {
-    document.getElementById('createQuizBtn').addEventListener('click', createQuiz);
-    document.getElementById('loadQuizBtn').addEventListener('click', loadQuiz);
+    document.getElementById('uploadCsvBtn').addEventListener('click', uploadCSV);
     document.getElementById('questionType').addEventListener('change', handleQuestionTypeChange);
     document.getElementById('addQuestionBtn').addEventListener('click', addQuestion);
     document.getElementById('startGameBtn').addEventListener('click', startGame);
-    document.getElementById('pauseGameBtn').addEventListener('click', pauseGame);
-    document.getElementById('resumeGameBtn').addEventListener('click', resumeGame);
-    document.getElementById('questionImage').addEventListener('change', handleImageUpload);
+    document.getElementById('nextQuestionBtn').addEventListener('click', nextQuestion);
+    document.getElementById('forceStopBtn').addEventListener('click', forceStop);
     
     // MCQ options
-    document.getElementById('addMcqOption').addEventListener('click', () => addMcqOption());
-    document.getElementById('addMultiSelectOption').addEventListener('click', () => addMultiSelectOption());
     document.getElementById('addLeftItem').addEventListener('click', () => addMatchItem('left'));
     document.getElementById('addRightItem').addEventListener('click', () => addMatchItem('right'));
     
@@ -50,10 +45,14 @@ function setupEventListeners() {
 }
 
 function setupSocketListeners() {
-    socket.on('admin:quiz_loaded', (data) => {
-        currentQuiz = data.questions;
+    socket.on('admin:questions_loaded', (data) => {
+        currentQuestions = data.questions;
         displayQuestions();
-        alert('Quiz loaded successfully!');
+        // Only show alert if questions were actually loaded (not on initial empty load)
+        if (currentQuestions.length > 0) {
+            alert('Questions loaded successfully!');
+        }
+        document.getElementById('startGameBtn').disabled = currentQuestions.length === 0;
     });
 
     socket.on('admin:error', (data) => {
@@ -66,77 +65,86 @@ function setupSocketListeners() {
 
     socket.on('lobby:update', (data) => {
         updatePlayersList(data.players);
-        document.getElementById('startGameBtn').disabled = data.players.length === 0 || currentQuiz === null || currentQuiz.length === 0;
     });
 
-    socket.on('game:leaderboard_update', (data) => {
-        updateLeaderboard(data.leaderboard);
-    });
-
-    socket.on('game:finished', (data) => {
-        updateLeaderboard(data.leaderboard);
-        alert('Game finished!');
-        document.getElementById('startGameBtn').disabled = false;
-        document.getElementById('pauseGameBtn').disabled = true;
-        document.getElementById('resumeGameBtn').disabled = true;
+    socket.on('leaderboard_update', (data) => {
+        updateLeaderboard(data);
     });
 }
 
-// Quiz Management
-async function loadQuizzes() {
+// CSV Upload
+async function uploadCSV() {
+    const fileInput = document.getElementById('csvFile');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        alert('Please select a CSV file');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('csv', file);
+    const mode = document.querySelector('input[name="uploadMode"]:checked').value;
+    formData.append('mode', mode);
+
+    const statusEl = document.getElementById('csvUploadStatus');
+    statusEl.textContent = 'Uploading...';
+    statusEl.className = 'status-message info';
+
     try {
-        const response = await fetch('/api/quizzes');
-        const quizzes = await response.json();
-        const select = document.getElementById('quizSelect');
-        select.innerHTML = '<option value="">-- Select a Quiz --</option>';
-        quizzes.forEach(quiz => {
-            const option = document.createElement('option');
-            option.value = quiz.id;
-            option.textContent = quiz.name;
-            select.appendChild(option);
+        const response = await fetch('/api/questions/upload-csv', {
+            method: 'POST',
+            body: formData
         });
-        if (quizzes.length > 0) {
-            document.getElementById('quizListSection').style.display = 'block';
+        const data = await response.json();
+        
+        if (data.success) {
+            statusEl.textContent = `Success! Uploaded ${data.count} questions.`;
+            statusEl.className = 'status-message success';
+            fileInput.value = '';
+            loadQuestions();
+        } else {
+            statusEl.textContent = 'Upload failed: ' + (data.error || 'Unknown error');
+            statusEl.className = 'status-message error';
         }
     } catch (error) {
-        console.error('Error loading quizzes:', error);
+        console.error('Error uploading CSV:', error);
+        statusEl.textContent = 'Error uploading CSV file';
+        statusEl.className = 'status-message error';
     }
 }
 
-async function createQuiz() {
-    const name = document.getElementById('quizName').value.trim();
-    if (!name) {
-        alert('Please enter a quiz name');
-        return;
-    }
-
+// Load Questions (with alert)
+async function loadQuestions() {
     try {
-        const response = await fetch('/api/quizzes', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, questions: [] })
-        });
-        const quiz = await response.json();
-        currentQuizId = quiz.id;
-        currentQuiz = [];
-        document.getElementById('questionBuilder').style.display = 'block';
-        document.getElementById('questionsList').style.display = 'block';
-        loadQuizzes();
+        const response = await fetch('/api/questions');
+        currentQuestions = await response.json();
+        displayQuestions();
+        document.getElementById('startGameBtn').disabled = currentQuestions.length === 0;
+        
+        // Also load questions into server's game state
+        socket.emit('admin:load_questions');
     } catch (error) {
-        console.error('Error creating quiz:', error);
-        alert('Error creating quiz');
+        console.error('Error loading questions:', error);
+        alert('Error loading questions');
     }
 }
 
-async function loadQuiz() {
-    const quizId = document.getElementById('quizSelect').value;
-    if (!quizId) {
-        alert('Please select a quiz');
-        return;
+// Load Questions silently (no alert) - for initial load
+async function loadQuestionsSilent() {
+    try {
+        const response = await fetch('/api/questions');
+        currentQuestions = await response.json();
+        displayQuestions();
+        document.getElementById('startGameBtn').disabled = currentQuestions.length === 0;
+        
+        // Only load into server if there are questions
+        if (currentQuestions.length > 0) {
+            socket.emit('admin:load_questions');
+        }
+    } catch (error) {
+        console.error('Error loading questions:', error);
     }
-
-    currentQuizId = quizId;
-    socket.emit('admin:load_quiz', { quizId });
 }
 
 // Question Type Handling
@@ -146,81 +154,28 @@ function handleQuestionTypeChange() {
         field.style.display = 'none';
     });
 
-    if (type === 'mcq') {
+    if (type === 'mcq' || type === 'code') {
         document.getElementById('mcqFields').style.display = 'block';
+        if (type === 'code') {
+            document.getElementById('codeFields').style.display = 'block';
+        }
         updateMcqCorrectOptions();
-    } else if (type === 'multi_select') {
-        document.getElementById('multiSelectFields').style.display = 'block';
-    } else if (type === 'match_following') {
+    } else if (type === 'match') {
         document.getElementById('matchFields').style.display = 'block';
         updateMatchPairs();
     }
 }
 
-function addMcqOption() {
-    const container = document.getElementById('mcqOptions');
-    const div = document.createElement('div');
-    div.className = 'option-row';
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.className = 'option-input';
-    input.placeholder = 'Option';
-    
-    const removeBtn = document.createElement('button');
-    removeBtn.className = 'btn-remove-option';
-    removeBtn.textContent = '×';
-    removeBtn.addEventListener('click', () => {
-        div.remove();
-        updateMcqCorrectOptions();
-    });
-    
-    div.appendChild(input);
-    div.appendChild(removeBtn);
-    container.appendChild(div);
-    updateMcqCorrectOptions();
-}
-
-function addMultiSelectOption() {
-    const container = document.getElementById('multiSelectOptions');
-    const div = document.createElement('div');
-    div.className = 'option-row';
-    
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.className = 'option-input';
-    input.placeholder = 'Option';
-    
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.className = 'correct-checkbox';
-    
-    const label = document.createElement('label');
-    label.textContent = 'Correct';
-    
-    const removeBtn = document.createElement('button');
-    removeBtn.className = 'btn-remove-option';
-    removeBtn.textContent = '×';
-    removeBtn.addEventListener('click', () => {
-        div.remove();
-    });
-    
-    div.appendChild(input);
-    div.appendChild(checkbox);
-    div.appendChild(label);
-    div.appendChild(removeBtn);
-    container.appendChild(div);
-}
-
 function updateMcqCorrectOptions() {
     const select = document.getElementById('mcqCorrect');
     const options = Array.from(document.querySelectorAll('#mcqOptions .option-input'))
-        .map((input, index) => ({ value: String.fromCharCode(65 + index), text: input.value || `Option ${String.fromCharCode(65 + index)}` }));
+        .map((input, index) => ({ value: index, text: input.value || `Option ${String.fromCharCode(65 + index)}` }));
     
     select.innerHTML = '';
-    options.forEach(opt => {
+    options.forEach((opt, index) => {
         const option = document.createElement('option');
         option.value = opt.value;
-        option.textContent = opt.text;
+        option.textContent = `${String.fromCharCode(65 + index)} (Index ${opt.value})`;
         select.appendChild(option);
     });
 }
@@ -249,12 +204,11 @@ function addMatchItem(side) {
     updateMatchPairs();
 }
 
-// Make function globally accessible for inline handlers (if any remain)
 window.updateMatchPairs = updateMatchPairs;
 
 function updateMatchPairs() {
-    const leftItems = Array.from(document.querySelectorAll('#leftItems .match-input')).map(i => i.value);
-    const rightItems = Array.from(document.querySelectorAll('#rightItems .match-input')).map(i => i.value);
+    const leftItems = Array.from(document.querySelectorAll('#leftItems .match-input')).map(i => i.value).filter(v => v);
+    const rightItems = Array.from(document.querySelectorAll('#rightItems .match-input')).map(i => i.value).filter(v => v);
     const container = document.getElementById('matchPairs');
     
     container.innerHTML = '';
@@ -276,91 +230,50 @@ function updateMatchPairs() {
     });
 }
 
-// Image Upload
-async function handleImageUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append('image', file);
-
-    try {
-        const response = await fetch('/api/upload', {
-            method: 'POST',
-            body: formData
-        });
-        const data = await response.json();
-        uploadedImageUrl = data.url;
-        
-        const preview = document.getElementById('imagePreview');
-        preview.innerHTML = `<img src="${data.url}" alt="Preview" style="max-width: 300px; margin-top: 10px;">`;
-    } catch (error) {
-        console.error('Error uploading image:', error);
-        alert('Error uploading image');
-    }
-}
-
 // Add Question
 async function addQuestion() {
     const type = document.getElementById('questionType').value;
-    const questionText = document.getElementById('questionText').value.trim();
+    const text = document.getElementById('questionText').value.trim();
     const timer = parseInt(document.getElementById('questionTimer').value) || 30;
-    const code = document.getElementById('questionCode').value.trim();
 
-    if (!questionText) {
+    if (!text) {
         alert('Please enter question text');
         return;
     }
 
     let questionData = {
         type,
-        questionText,
-        timer,
-        code: code || undefined,
-        image: uploadedImageUrl || undefined
+        text,
+        timer
     };
 
-    if (type === 'mcq') {
+    if (type === 'mcq' || type === 'code') {
         const options = Array.from(document.querySelectorAll('#mcqOptions .option-input'))
             .map(input => input.value.trim())
             .filter(v => v);
-        const correctAnswer = document.getElementById('mcqCorrect').value;
+        const correctAnswer = parseInt(document.getElementById('mcqCorrect').value);
 
-        if (options.length < 2) {
-            alert('Please add at least 2 options');
+        if (options.length !== 4) {
+            alert('Please provide exactly 4 options');
             return;
         }
-        if (!correctAnswer) {
-            alert('Please select correct answer');
+        if (isNaN(correctAnswer) || correctAnswer < 0 || correctAnswer > 3) {
+            alert('Please select a valid correct answer');
             return;
         }
 
         questionData.options = options;
         questionData.correctAnswer = correctAnswer;
-    } else if (type === 'multi_select') {
-        const options = Array.from(document.querySelectorAll('#multiSelectOptions .option-row')).map(row => {
-            const input = row.querySelector('.option-input');
-            const checkbox = row.querySelector('.correct-checkbox');
-            return {
-                text: input.value.trim(),
-                correct: checkbox.checked
-            };
-        }).filter(opt => opt.text);
-
-        if (options.length < 2) {
-            alert('Please add at least 2 options');
-            return;
+        
+        if (type === 'code') {
+            const codeSnippet = document.getElementById('codeSnippet').value.trim();
+            if (!codeSnippet) {
+                alert('Please enter code snippet');
+                return;
+            }
+            questionData.codeSnippet = codeSnippet;
         }
-
-        const correctAnswers = options.filter(opt => opt.correct).map(opt => opt.text);
-        if (correctAnswers.length === 0) {
-            alert('Please mark at least one option as correct');
-            return;
-        }
-
-        questionData.options = options.map(opt => opt.text);
-        questionData.correctAnswers = correctAnswers;
-    } else if (type === 'match_following') {
+    } else if (type === 'match') {
         const leftItems = Array.from(document.querySelectorAll('#leftItems .match-input')).map(i => i.value.trim()).filter(v => v);
         const rightItems = Array.from(document.querySelectorAll('#rightItems .match-input')).map(i => i.value.trim()).filter(v => v);
         const matchSelects = Array.from(document.querySelectorAll('#matchPairs .match-select'));
@@ -370,41 +283,46 @@ async function addQuestion() {
             return;
         }
 
-        const correctMap = {};
+        const matchMap = {};
         matchSelects.forEach((select, index) => {
             const rightIndex = parseInt(select.value);
             if (rightIndex >= 0 && rightIndex < rightItems.length) {
-                correctMap[leftItems[index]] = rightItems[rightIndex];
+                matchMap[leftItems[index]] = rightItems[rightIndex];
             }
         });
 
-        if (Object.keys(correctMap).length === 0) {
+        if (Object.keys(matchMap).length === 0) {
             alert('Please create at least one match pair');
             return;
         }
 
-        questionData.data = { left: leftItems, right: rightItems };
-        questionData.correctMap = correctMap;
+        questionData.matchMap = matchMap;
     }
 
     try {
-        const response = await fetch(`/api/quizzes/${currentQuizId}/questions`, {
+        const response = await fetch('/api/questions', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(questionData)
         });
         const question = await response.json();
         
-        if (!currentQuiz) currentQuiz = [];
-        currentQuiz.push(question);
+        currentQuestions.push(question);
         displayQuestions();
         
         // Reset form
         document.getElementById('questionText').value = '';
-        document.getElementById('questionCode').value = '';
-        document.getElementById('questionImage').value = '';
-        document.getElementById('imagePreview').innerHTML = '';
-        uploadedImageUrl = null;
+        document.getElementById('codeSnippet').value = '';
+        document.getElementById('questionTimer').value = '30';
+        document.querySelectorAll('.match-input').forEach(input => {
+            const row = input.closest('.match-item-row');
+            if (row && row !== row.parentElement.firstElementChild) {
+                row.remove();
+            } else {
+                input.value = '';
+            }
+        });
+        updateMatchPairs();
         
         alert('Question added successfully!');
     } catch (error) {
@@ -414,16 +332,16 @@ async function addQuestion() {
 }
 
 function displayQuestions() {
-    const container = document.getElementById('questionsContainer');
-    if (!currentQuiz || currentQuiz.length === 0) {
-        container.innerHTML = '<p class="empty-state">No questions added yet</p>';
+    const container = document.getElementById('questionsList');
+    if (!currentQuestions || currentQuestions.length === 0) {
+        container.innerHTML = '<p class="empty-state">No questions available</p>';
         return;
     }
 
-    container.innerHTML = currentQuiz.map((q, index) => `
+    container.innerHTML = currentQuestions.map((q, index) => `
         <div class="question-card">
             <h4>Question ${index + 1}: ${q.type.toUpperCase()}</h4>
-            <p>${q.questionText}</p>
+            <p>${q.text}</p>
             <p><small>Timer: ${q.timer}s</small></p>
         </div>
     `).join('');
@@ -431,25 +349,34 @@ function displayQuestions() {
 
 // Game Control
 function startGame() {
-    if (!currentQuiz || currentQuiz.length === 0) {
-        alert('Please load a quiz with questions first');
+    if (currentQuestions.length === 0) {
+        alert('Please load questions first');
         return;
     }
-    socket.emit('admin:start_game');
-    document.getElementById('startGameBtn').disabled = true;
-    document.getElementById('pauseGameBtn').disabled = false;
+    
+    // Load questions into server (in case they weren't loaded yet)
+    socket.emit('admin:load_questions');
+    
+    // Small delay to ensure questions are loaded on server
+    setTimeout(() => {
+        socket.emit('admin:start_game');
+        document.getElementById('startGameBtn').disabled = true;
+        document.getElementById('nextQuestionBtn').disabled = false;
+        document.getElementById('forceStopBtn').disabled = false;
+    }, 100);
 }
 
-function pauseGame() {
-    socket.emit('admin:pause_game');
-    document.getElementById('pauseGameBtn').disabled = true;
-    document.getElementById('resumeGameBtn').disabled = false;
+function nextQuestion() {
+    socket.emit('admin:next_question');
 }
 
-function resumeGame() {
-    socket.emit('admin:resume_game');
-    document.getElementById('pauseGameBtn').disabled = false;
-    document.getElementById('resumeGameBtn').disabled = true;
+function forceStop() {
+    if (confirm('Are you sure you want to force stop the game?')) {
+        socket.emit('admin:force_stop');
+        document.getElementById('startGameBtn').disabled = false;
+        document.getElementById('nextQuestionBtn').disabled = true;
+        document.getElementById('forceStopBtn').disabled = true;
+    }
 }
 
 function updateGameStatus(data) {
@@ -467,7 +394,7 @@ function updatePlayersList(players) {
     }
     container.innerHTML = players.map(p => `
         <div class="player-item">
-            <span>${p.nickname}</span>
+            <span><strong>${p.name}</strong> (${p.rollNumber})</span>
             <span class="score">Score: ${p.score}</span>
         </div>
     `).join('');
@@ -482,7 +409,7 @@ function updateLeaderboard(leaderboard) {
     container.innerHTML = leaderboard.map(p => `
         <div class="leaderboard-item">
             <span class="rank">#${p.rank}</span>
-            <span class="name">${p.nickname}</span>
+            <span class="name">${p.name}</span>
             <span class="score">${p.score} pts</span>
         </div>
     `).join('');
@@ -492,4 +419,3 @@ function updateLeaderboard(leaderboard) {
 setInterval(() => {
     socket.emit('admin:get_state');
 }, 1000);
-

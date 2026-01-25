@@ -4,6 +4,7 @@ const socketIo = require('socket.io');
 const path = require('path');
 const fs = require('fs').promises;
 const multer = require('multer');
+const csv = require('csv-parser');
 const { v4: uuidv4 } = require('uuid');
 
 const app = express();
@@ -45,27 +46,31 @@ let gameState = {
   status: 'lobby', // lobby, playing, paused, finished
   currentQuestionIndex: -1,
   questions: [],
-  players: new Map(), // socketId -> {nickname, score, answers}
+  players: new Map(), // socketId -> {name, rollNumber, score, answers}
+  rollNumberMap: new Map(), // rollNumber -> socketId (for reconnection)
   timer: null,
   timeRemaining: 0,
   questionStartTime: null
 };
 
-// Load quizzes from JSON file
-async function loadQuizzes() {
+// Roll Number validation pattern
+const ROLL_NUMBER_PATTERN = /^[0-9A-Z]+$/;
+
+// Load questions from JSON file
+async function loadQuestions() {
   try {
-    const data = await fs.readFile(path.join(DATA_DIR, 'quizzes.json'), 'utf8');
+    const data = await fs.readFile(path.join(DATA_DIR, 'questions.json'), 'utf8');
     return JSON.parse(data);
   } catch (error) {
     return [];
   }
 }
 
-// Save quizzes to JSON file
-async function saveQuizzes(quizzes) {
+// Save questions to JSON file
+async function saveQuestions(questions) {
   await fs.writeFile(
-    path.join(DATA_DIR, 'quizzes.json'),
-    JSON.stringify(quizzes, null, 2)
+    path.join(DATA_DIR, 'questions.json'),
+    JSON.stringify(questions, null, 2)
   );
 }
 
@@ -79,45 +84,100 @@ app.get('/admin', (req, res) => {
 });
 
 // API Routes
-app.get('/api/quizzes', async (req, res) => {
-  const quizzes = await loadQuizzes();
-  res.json(quizzes);
+app.get('/api/questions', async (req, res) => {
+  const questions = await loadQuestions();
+  res.json(questions);
 });
 
-app.post('/api/quizzes', async (req, res) => {
-  const quizzes = await loadQuizzes();
-  const newQuiz = {
-    id: uuidv4(),
-    name: req.body.name || 'Untitled Quiz',
-    questions: req.body.questions || [],
-    createdAt: new Date().toISOString()
-  };
-  quizzes.push(newQuiz);
-  await saveQuizzes(quizzes);
-  res.json(newQuiz);
-});
-
-app.post('/api/quizzes/:id/questions', async (req, res) => {
-  const quizzes = await loadQuizzes();
-  const quiz = quizzes.find(q => q.id === req.params.id);
-  if (!quiz) {
-    return res.status(404).json({ error: 'Quiz not found' });
-  }
-  
+app.post('/api/questions', async (req, res) => {
+  const questions = await loadQuestions();
   const question = {
     id: uuidv4(),
-    ...req.body
+    type: req.body.type, // mcq, code, match
+    text: req.body.text,
+    timer: req.body.timer || 30,
+    options: req.body.options || [],
+    correctAnswer: req.body.correctAnswer, // Integer index for MCQ/Code
+    codeSnippet: req.body.codeSnippet || null,
+    matchMap: req.body.matchMap || null // Only for 'match' type
   };
-  quiz.questions.push(question);
-  await saveQuizzes(quizzes);
+  questions.push(question);
+  await saveQuestions(questions);
   res.json(question);
 });
 
-app.post('/api/upload', upload.single('image'), (req, res) => {
+// CSV Upload endpoint
+app.post('/api/questions/upload-csv', upload.single('csv'), async (req, res) => {
   if (!req.file) {
-    return res.status(400).json({ error: 'No file uploaded' });
+    return res.status(400).json({ error: 'No CSV file uploaded' });
   }
-  res.json({ url: `/uploads/${req.file.filename}` });
+
+  const questions = [];
+  const filePath = req.file.path;
+
+  const fsStream = require('fs').createReadStream;
+  
+  return new Promise((resolve, reject) => {
+    fsStream(filePath)
+      .pipe(csv())
+      .on('data', (row) => {
+        const question = {
+          id: uuidv4(),
+          type: row.type?.toLowerCase() || 'mcq',
+          text: row.question || row.text || '',
+          timer: parseInt(row.timer) || 30,
+          options: [
+            row.option1 || '',
+            row.option2 || '',
+            row.option3 || '',
+            row.option4 || ''
+          ].filter(opt => opt),
+          correctAnswer: parseInt(row.correctAnswer) || 0,
+          codeSnippet: row.codeSnippet || null,
+          matchMap: null
+        };
+
+        // Handle match type if needed
+        if (question.type === 'match') {
+          // CSV would need special format for match questions
+          // For now, skip match questions from CSV
+          return;
+        }
+
+        questions.push(question);
+      })
+      .on('end', async () => {
+        try {
+          const existingQuestions = await loadQuestions();
+          const mode = req.body.mode || 'append'; // 'append' or 'replace'
+          
+          if (mode === 'replace') {
+            await saveQuestions(questions);
+          } else {
+            existingQuestions.push(...questions);
+            await saveQuestions(existingQuestions);
+          }
+
+          // Clean up uploaded file
+          await fs.unlink(filePath);
+          
+          res.json({ 
+            success: true, 
+            message: `Uploaded ${questions.length} questions`,
+            count: questions.length
+          });
+          resolve();
+        } catch (error) {
+          reject(error);
+        }
+      })
+      .on('error', (error) => {
+        reject(error);
+      });
+  }).catch(error => {
+    console.error('CSV parsing error:', error);
+    res.status(500).json({ error: 'Failed to parse CSV file' });
+  });
 });
 
 // Socket.io Connection Handling
@@ -125,12 +185,15 @@ io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
 
   // Admin actions
-  socket.on('admin:load_quiz', async (data) => {
-    const quizzes = await loadQuizzes();
-    const quiz = quizzes.find(q => q.id === data.quizId);
-    if (quiz) {
-      gameState.questions = quiz.questions;
-      socket.emit('admin:quiz_loaded', { questions: quiz.questions });
+  socket.on('admin:load_questions', async () => {
+    try {
+      const questions = await loadQuestions();
+      gameState.questions = questions;
+      socket.emit('admin:questions_loaded', { questions: questions });
+      console.log(`Loaded ${questions.length} questions into game state`);
+    } catch (error) {
+      console.error('Error loading questions:', error);
+      socket.emit('admin:error', { message: 'Failed to load questions: ' + error.message });
     }
   });
 
@@ -144,73 +207,103 @@ io.on('connection', (socket) => {
     startQuestion(0);
   });
 
-  socket.on('admin:pause_game', () => {
+  socket.on('admin:next_question', () => {
+    if (gameState.status === 'playing') {
+      if (gameState.timer) {
+        clearInterval(gameState.timer);
+        gameState.timer = null;
+      }
+      endQuestion();
+    }
+  });
+
+  socket.on('admin:force_stop', () => {
     if (gameState.timer) {
       clearInterval(gameState.timer);
       gameState.timer = null;
     }
-    gameState.status = 'paused';
-    io.emit('game:paused');
-  });
-
-  socket.on('admin:resume_game', () => {
-    if (gameState.status === 'paused' && gameState.currentQuestionIndex >= 0) {
-      gameState.status = 'playing';
-      continueQuestion();
-    }
-  });
-
-  socket.on('admin:kick_user', (data) => {
-    const player = Array.from(gameState.players.entries())
-      .find(([_, p]) => p.nickname === data.nickname);
-    if (player) {
-      const [socketId] = player;
-      gameState.players.delete(socketId);
-      io.to(socketId).emit('kicked');
-      io.to(socketId).disconnectSockets();
-      broadcastLobbyUpdate();
-    }
+    gameState.status = 'lobby';
+    io.emit('game:stopped');
   });
 
   socket.on('admin:get_state', () => {
     socket.emit('admin:state', {
       status: gameState.status,
       currentQuestionIndex: gameState.currentQuestionIndex,
-      players: Array.from(gameState.players.values()),
+      players: Array.from(gameState.players.values()).map(p => ({
+        name: p.name,
+        rollNumber: p.rollNumber,
+        score: p.score
+      })),
       timeRemaining: gameState.timeRemaining,
       totalQuestions: gameState.questions.length
     });
   });
 
-  // Student actions
-  socket.on('student:join', (data) => {
-    const nickname = data.nickname?.trim();
-    if (!nickname || nickname.length < 1) {
-      socket.emit('student:error', { message: 'Nickname required' });
+  // Student actions - PRD compliant
+  socket.on('join_request', (data) => {
+    const name = data.name?.trim();
+    const rollNumber = data.rollNumber?.trim().toUpperCase();
+
+    // Validation
+    if (!name || name.length < 1) {
+      socket.emit('login_ack', { success: false, msg: 'Full Name is required' });
       return;
     }
 
-    // Check if nickname already exists
-    const existingPlayer = Array.from(gameState.players.values())
-      .find(p => p.nickname.toLowerCase() === nickname.toLowerCase());
-    if (existingPlayer) {
-      socket.emit('student:error', { message: 'Nickname already taken' });
+    if (!rollNumber || rollNumber.length < 1) {
+      socket.emit('login_ack', { success: false, msg: 'Roll Number is required' });
       return;
     }
 
+    // Format check
+    if (!ROLL_NUMBER_PATTERN.test(rollNumber)) {
+      socket.emit('login_ack', { 
+        success: false, 
+        msg: 'Invalid Roll Number format. Use only numbers and uppercase letters.' 
+      });
+      return;
+    }
+
+    // Uniqueness check - check if roll number is already active
+    const existingSocketId = gameState.rollNumberMap.get(rollNumber);
+    if (existingSocketId && existingSocketId !== socket.id) {
+      const existingPlayer = gameState.players.get(existingSocketId);
+      if (existingPlayer) {
+        socket.emit('login_ack', { 
+          success: false, 
+          msg: 'This Roll Number is already in use. Please use a different one.' 
+        });
+        return;
+      }
+    }
+
+    // Reconnection: restore previous score if exists
+    let previousScore = 0;
+    let previousAnswers = new Map();
+    if (existingSocketId && gameState.players.has(existingSocketId)) {
+      const oldPlayer = gameState.players.get(existingSocketId);
+      previousScore = oldPlayer.score;
+      previousAnswers = oldPlayer.answers;
+      // Remove old socket
+      gameState.players.delete(existingSocketId);
+    }
+
+    // Add/update player
     gameState.players.set(socket.id, {
-      nickname,
-      score: 0,
-      answers: new Map(),
+      name,
+      rollNumber,
+      score: previousScore,
+      answers: previousAnswers,
       joinedAt: new Date().toISOString()
     });
 
-    socket.emit('student:joined', {
-      status: gameState.status,
-      currentQuestion: gameState.currentQuestionIndex >= 0 
-        ? gameState.questions[gameState.currentQuestionIndex] 
-        : null,
-      timeRemaining: gameState.timeRemaining
+    gameState.rollNumberMap.set(rollNumber, socket.id);
+
+    socket.emit('login_ack', { 
+      success: true, 
+      msg: 'Successfully joined the game',
+      score: previousScore
     });
 
     broadcastLobbyUpdate();
@@ -218,16 +311,19 @@ io.on('connection', (socket) => {
     // If game is in progress, send current question
     if (gameState.status === 'playing' && gameState.currentQuestionIndex >= 0) {
       const question = gameState.questions[gameState.currentQuestionIndex];
-      socket.emit('game:new_question', {
-        question,
-        timeRemaining: gameState.timeRemaining,
-        questionNumber: gameState.currentQuestionIndex + 1,
-        totalQuestions: gameState.questions.length
-      });
+      const sanitizedQuestion = {
+        id: question.id,
+        type: question.type,
+        text: question.text,
+        options: question.options,
+        codeSnippet: question.codeSnippet,
+        duration: question.timer
+      };
+      socket.emit('new_question', sanitizedQuestion);
     }
   });
 
-  socket.on('student:answer', (data) => {
+  socket.on('submit_answer', (data) => {
     if (gameState.status !== 'playing') {
       return;
     }
@@ -242,17 +338,20 @@ io.on('connection', (socket) => {
       return;
     }
 
-    // Store answer with timestamp
+    // Store answer
     player.answers.set(gameState.currentQuestionIndex, {
-      answer: data.answer,
-      timestamp: Date.now(),
-      questionStartTime: gameState.questionStartTime
+      q_id: data.q_id,
+      answerPayload: data.answerPayload,
+      timestamp: Date.now()
     });
-
-    socket.emit('student:answer_received');
   });
 
   socket.on('disconnect', () => {
+    const player = gameState.players.get(socket.id);
+    if (player) {
+      // Keep roll number mapping for reconnection, but remove socket
+      // The roll number will be reused if they reconnect
+    }
     gameState.players.delete(socket.id);
     broadcastLobbyUpdate();
     console.log('Client disconnected:', socket.id);
@@ -271,21 +370,22 @@ function startQuestion(index) {
   gameState.timeRemaining = question.timer || 30;
   gameState.questionStartTime = Date.now();
 
-  // Broadcast new question
-  io.emit('game:new_question', {
-    question,
-    timeRemaining: gameState.timeRemaining,
-    questionNumber: index + 1,
-    totalQuestions: gameState.questions.length
-  });
+  // Broadcast new question (without answer key)
+  const sanitizedQuestion = {
+    id: question.id,
+    type: question.type,
+    text: question.text,
+    options: question.options,
+    codeSnippet: question.codeSnippet,
+    duration: question.timer
+  };
+
+  io.emit('new_question', sanitizedQuestion);
 
   // Start countdown
   gameState.timer = setInterval(() => {
     gameState.timeRemaining--;
     
-    // Broadcast time update
-    io.emit('game:timer_update', { timeRemaining: gameState.timeRemaining });
-
     if (gameState.timeRemaining <= 0) {
       clearInterval(gameState.timer);
       gameState.timer = null;
@@ -294,45 +394,31 @@ function startQuestion(index) {
   }, 1000);
 }
 
-function continueQuestion() {
-  if (gameState.currentQuestionIndex >= 0) {
-    const question = gameState.questions[gameState.currentQuestionIndex];
-    gameState.timer = setInterval(() => {
-      gameState.timeRemaining--;
-      io.emit('game:timer_update', { timeRemaining: gameState.timeRemaining });
-      if (gameState.timeRemaining <= 0) {
-        clearInterval(gameState.timer);
-        gameState.timer = null;
-        endQuestion();
-      }
-    }, 1000);
-  }
-}
-
 function endQuestion() {
   // Lock inputs
-  io.emit('game:time_up');
+  io.emit('time_up');
 
   // Calculate scores
   calculateScores();
 
-  // Broadcast leaderboard
+  // Broadcast leaderboard (Top 5)
   const leaderboard = Array.from(gameState.players.values())
     .sort((a, b) => b.score - a.score)
+    .slice(0, 5)
     .map((p, index) => ({
       rank: index + 1,
-      nickname: p.nickname,
+      name: p.name,
       score: p.score
     }));
 
-  io.emit('game:leaderboard_update', { leaderboard });
+  io.emit('leaderboard_update', leaderboard);
 
-  // Wait 3-5 seconds then move to next question
+  // Wait 5 seconds then move to next question
   setTimeout(() => {
     if (gameState.status === 'playing') {
       startQuestion(gameState.currentQuestionIndex + 1);
     }
-  }, 4000);
+  }, 5000);
 }
 
 function calculateScores() {
@@ -345,23 +431,19 @@ function calculateScores() {
 
     let points = 0;
 
-    if (question.type === 'mcq') {
-      if (answerData.answer === question.correctAnswer) {
+    if (question.type === 'mcq' || question.type === 'code') {
+      // Both MCQ and Code use integer index answer
+      const userAnswer = typeof answerData.answerPayload === 'number' 
+        ? answerData.answerPayload 
+        : parseInt(answerData.answerPayload);
+      
+      if (userAnswer === question.correctAnswer) {
         points = 10;
       }
-    } else if (question.type === 'multi_select') {
-      const correctSet = new Set(question.correctAnswers);
-      const answerSet = new Set(answerData.answer);
-      const correctCount = [...answerSet].filter(a => correctSet.has(a)).length;
-      const totalCorrect = question.correctAnswers.length;
-      if (correctCount === totalCorrect && answerSet.size === correctSet.size) {
-        points = 10;
-      } else if (correctCount > 0) {
-        points = Math.round((correctCount / totalCorrect) * 10);
-      }
-    } else if (question.type === 'match_following') {
-      const correctMap = question.correctMap || {};
-      const userMap = answerData.answer || {};
+    } else if (question.type === 'match') {
+      // Match type: partial credit, 20 points total
+      const correctMap = question.matchMap || {};
+      const userMap = answerData.answerPayload || {};
       let correctPairs = 0;
       let totalPairs = Object.keys(correctMap).length;
 
@@ -372,7 +454,7 @@ function calculateScores() {
       }
 
       if (totalPairs > 0) {
-        points = Math.round((correctPairs / totalPairs) * 10);
+        points = Math.round((correctPairs / totalPairs) * 20);
       }
     }
 
@@ -386,7 +468,7 @@ function endGame() {
     .sort((a, b) => b.score - a.score)
     .map((p, index) => ({
       rank: index + 1,
-      nickname: p.nickname,
+      name: p.name,
       score: p.score
     }));
 
@@ -395,7 +477,8 @@ function endGame() {
 
 function broadcastLobbyUpdate() {
   const players = Array.from(gameState.players.values()).map(p => ({
-    nickname: p.nickname,
+    name: p.name,
+    rollNumber: p.rollNumber,
     score: p.score
   }));
   io.emit('lobby:update', { players });
@@ -408,4 +491,3 @@ server.listen(PORT, () => {
   console.log(`\nTo access from other devices on LAN, use your local IP address:`);
   console.log(`Example: http://192.168.1.50:${PORT}`);
 });
-
