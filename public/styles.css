@@ -310,6 +310,9 @@ header h1 {
 
 .leaderboard {
     min-height: 200px;
+    max-height: 420px;
+    overflow-y: auto;
+    padding-right: 6px;
 }
 
 .leaderboard-item {
@@ -331,6 +334,39 @@ header h1 {
 .leaderboard-item .name {
     flex: 1;
     margin: 0 15px;
+}
+
+.muted {
+    color: #858585;
+    font-weight: 500;
+    margin-left: 6px;
+}
+
+/* Admin status bar */
+#adminStatusBar {
+    margin: 0 0 16px 0;
+}
+
+/* Modal reused for admin auth */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-content {
+    width: 100%;
+    max-width: 520px;
+    background: #252526;
+    border: 1px solid #3c3c3c;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+    padding: 28px;
 }
 
 .leaderboard-item .score {
@@ -648,12 +684,15 @@ header h1 {
 
 /* Leaderboard Screen */
 .leaderboard-container {
-    max-width: 600px;
-    margin: 50px auto;
-    background: #252526;
+    max-width: 900px;
+    margin: 30px auto;
+    background: radial-gradient(1200px 600px at 20% 0%, rgba(0,122,204,0.25), transparent 60%),
+                radial-gradient(900px 500px at 90% 20%, rgba(40,167,69,0.18), transparent 60%),
+                #252526;
     padding: 40px;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    border-radius: 14px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+    border: 1px solid #3c3c3c;
 }
 
 .leaderboard-container h2 {
@@ -664,6 +703,45 @@ header h1 {
 
 .leaderboard-list {
     margin-bottom: 20px;
+    max-height: 62vh;
+    overflow-y: auto;
+    padding-right: 6px;
+}
+
+/* Fullscreen results mode (Leaderboard + Final) */
+#leaderboardScreen.active, #finalScreen.active {
+    padding: 0;
+}
+
+#leaderboardScreen.active .leaderboard-container,
+#finalScreen.active .final-container {
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    margin: 0;
+    border-radius: 0;
+    padding: 48px 56px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+#leaderboardScreen.active h2,
+#finalScreen.active h2 {
+    font-size: 44px;
+    letter-spacing: 0.5px;
+    margin-bottom: 18px;
+}
+
+#finalScreen.active h3 {
+    font-size: 22px;
+    margin-bottom: 18px;
+    color: #d4d4d4;
+}
+
+#leaderboardScreen.active .waiting-text {
+    margin-top: auto;
+    font-size: 18px;
 }
 
 .leaderboard-entry {

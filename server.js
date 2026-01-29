@@ -12,6 +12,7 @@ const server = http.createServer(app);
 const io = socketIo(server);
 
 const PORT = process.env.PORT || 3000;
+const ADMIN_PIN = process.env.ADMIN_PIN || 'labquiz';
 const DATA_DIR = path.join(__dirname, 'data');
 const UPLOADS_DIR = path.join(__dirname, 'uploads');
 
@@ -50,8 +51,19 @@ let gameState = {
   rollNumberMap: new Map(), // rollNumber -> socketId (for reconnection)
   timer: null,
   timeRemaining: 0,
-  questionStartTime: null
+  questionStartTime: null,
+  lastLeaderboard: [] // full leaderboard snapshot (for download)
 };
+
+// Admin auth (socket-based, local only)
+const authorizedAdmins = new Set(); // socket.id
+function requireAdmin(socket) {
+  if (!authorizedAdmins.has(socket.id)) {
+    socket.emit('admin:error', { message: 'Unauthorized. Please authenticate as Admin.' });
+    return false;
+  }
+  return true;
+}
 
 // Roll Number validation pattern
 const ROLL_NUMBER_PATTERN = /^[0-9A-Z]+$/;
@@ -87,6 +99,30 @@ app.get('/admin', (req, res) => {
 app.get('/api/questions', async (req, res) => {
   const questions = await loadQuestions();
   res.json(questions);
+});
+
+app.get('/api/leaderboard.json', (req, res) => {
+  res.json({ leaderboard: gameState.lastLeaderboard || [] });
+});
+
+app.get('/api/leaderboard.csv', (req, res) => {
+  const rows = gameState.lastLeaderboard || [];
+  const header = ['rank', 'name', 'rollNumber', 'score'];
+  const escapeCsv = (value) => {
+    const s = String(value ?? '');
+    if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+    return s;
+  };
+  const csvText =
+    header.join(',') +
+    '\n' +
+    rows
+      .map((r) => [r.rank, r.name, r.rollNumber, r.score].map(escapeCsv).join(','))
+      .join('\n');
+
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', 'attachment; filename=\"labquiz_leaderboard.csv\"');
+  res.send(csvText);
 });
 
 app.post('/api/questions', async (req, res) => {
@@ -185,12 +221,25 @@ io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
 
   // Admin actions
+  socket.on('admin:auth', (data) => {
+    const pin = String(data?.pin ?? '');
+    if (pin === ADMIN_PIN) {
+      authorizedAdmins.add(socket.id);
+      socket.emit('admin:auth_result', { success: true });
+      return;
+    }
+    socket.emit('admin:auth_result', { success: false, message: 'Invalid PIN' });
+  });
+
   socket.on('admin:load_questions', async () => {
+    if (!requireAdmin(socket)) return;
     try {
       const questions = await loadQuestions();
       gameState.questions = questions;
       socket.emit('admin:questions_loaded', { questions: questions });
-      console.log(`Loaded ${questions.length} questions into game state`);
+      if (questions.length > 0) {
+        console.log(`Loaded ${questions.length} questions into game state`);
+      }
     } catch (error) {
       console.error('Error loading questions:', error);
       socket.emit('admin:error', { message: 'Failed to load questions: ' + error.message });
@@ -198,6 +247,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('admin:start_game', () => {
+    if (!requireAdmin(socket)) return;
     if (gameState.questions.length === 0) {
       socket.emit('admin:error', { message: 'No questions loaded' });
       return;
@@ -208,6 +258,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('admin:next_question', () => {
+    if (!requireAdmin(socket)) return;
     if (gameState.status === 'playing') {
       if (gameState.timer) {
         clearInterval(gameState.timer);
@@ -218,6 +269,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('admin:force_stop', () => {
+    if (!requireAdmin(socket)) return;
     if (gameState.timer) {
       clearInterval(gameState.timer);
       gameState.timer = null;
@@ -227,6 +279,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('admin:get_state', () => {
+    // allow state polling even before auth (UI can show locked state)
     socket.emit('admin:state', {
       status: gameState.status,
       currentQuestionIndex: gameState.currentQuestionIndex,
@@ -354,6 +407,7 @@ io.on('connection', (socket) => {
     }
     gameState.players.delete(socket.id);
     broadcastLobbyUpdate();
+    authorizedAdmins.delete(socket.id);
     console.log('Client disconnected:', socket.id);
   });
 });
@@ -369,6 +423,12 @@ function startQuestion(index) {
   gameState.currentQuestionIndex = index;
   gameState.timeRemaining = question.timer || 30;
   gameState.questionStartTime = Date.now();
+
+  // Notify admin UI about question progress (fixes admin "always Question 1")
+  io.emit('admin:question_progress', {
+    currentQuestionIndex: gameState.currentQuestionIndex,
+    totalQuestions: gameState.questions.length
+  });
 
   // Broadcast new question (without answer key)
   const sanitizedQuestion = {
@@ -399,19 +459,30 @@ function endQuestion() {
   io.emit('time_up');
 
   // Calculate scores
-  calculateScores();
+  const perPlayerResults = calculateScoresAndReturnResults();
 
-  // Broadcast leaderboard (Top 5)
-  const leaderboard = Array.from(gameState.players.values())
+  // Send per-student right/wrong feedback (no answer key)
+  perPlayerResults.forEach((r) => {
+    io.to(r.socketId).emit('answer_result', {
+      correct: r.correct,
+      points: r.points
+    });
+  });
+
+  // Build full leaderboard snapshot
+  const fullLeaderboard = Array.from(gameState.players.values())
     .sort((a, b) => b.score - a.score)
-    .slice(0, 5)
     .map((p, index) => ({
       rank: index + 1,
       name: p.name,
+      rollNumber: p.rollNumber,
       score: p.score
     }));
 
-  io.emit('leaderboard_update', leaderboard);
+  gameState.lastLeaderboard = fullLeaderboard;
+
+  // Broadcast leaderboard (Top 5)
+  io.emit('leaderboard_update', fullLeaderboard.slice(0, 5));
 
   // Wait 5 seconds then move to next question
   setTimeout(() => {
@@ -421,15 +492,20 @@ function endQuestion() {
   }, 5000);
 }
 
-function calculateScores() {
+function calculateScoresAndReturnResults() {
   const question = gameState.questions[gameState.currentQuestionIndex];
-  if (!question) return;
+  if (!question) return [];
 
+  const results = [];
   gameState.players.forEach((player, socketId) => {
     const answerData = player.answers.get(gameState.currentQuestionIndex);
-    if (!answerData) return;
+    if (!answerData) {
+      results.push({ socketId, correct: false, points: 0 });
+      return;
+    }
 
     let points = 0;
+    let correct = false;
 
     if (question.type === 'mcq' || question.type === 'code') {
       // Both MCQ and Code use integer index answer
@@ -439,6 +515,7 @@ function calculateScores() {
       
       if (userAnswer === question.correctAnswer) {
         points = 10;
+        correct = true;
       }
     } else if (question.type === 'match') {
       // Match type: partial credit, 20 points total
@@ -455,11 +532,15 @@ function calculateScores() {
 
       if (totalPairs > 0) {
         points = Math.round((correctPairs / totalPairs) * 20);
+        correct = correctPairs === totalPairs;
       }
     }
 
     player.score += points;
+    results.push({ socketId, correct, points });
   });
+
+  return results;
 }
 
 function endGame() {
@@ -469,9 +550,11 @@ function endGame() {
     .map((p, index) => ({
       rank: index + 1,
       name: p.name,
+      rollNumber: p.rollNumber,
       score: p.score
     }));
 
+  gameState.lastLeaderboard = finalLeaderboard;
   io.emit('game:finished', { leaderboard: finalLeaderboard });
 }
 

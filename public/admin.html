@@ -16,6 +16,22 @@
             </div>
         </header>
 
+        <!-- Admin Auth Modal -->
+        <div id="adminAuthModal" class="modal" style="display: flex;">
+            <div class="modal-content">
+                <h2 style="margin-bottom: 10px;">Admin Login</h2>
+                <p style="color:#858585; margin-bottom: 20px;">Enter Admin PIN (local only).</p>
+                <div class="form-group">
+                    <label for="adminPinInput">Admin PIN</label>
+                    <input type="password" id="adminPinInput" class="form-control" placeholder="Default: labquiz">
+                </div>
+                <button id="adminLoginBtn" class="btn btn-primary">Unlock Admin</button>
+                <p id="adminAuthError" class="error-message" style="display:none;"></p>
+            </div>
+        </div>
+
+        <div id="adminStatusBar" class="status-message info" style="display:none;"></div>
+
         <div class="tabs">
             <button class="tab-btn active" data-tab="question-management">Question Management</button>
             <button class="tab-btn" data-tab="game-control">Game Control</button>
@@ -169,6 +185,9 @@
 
                 <div class="leaderboard-section">
                     <h3>Leaderboard</h3>
+                    <div class="control-buttons" style="margin-bottom:10px;">
+                        <button id="downloadLeaderboardBtn" class="btn btn-secondary" disabled>Download CSV</button>
+                    </div>
                     <div id="leaderboard" class="leaderboard">
                         <p class="empty-state">No scores yet</p>
                     </div>

@@ -1,189 +1,69 @@
 [
   {
-    "id": "fdec412e-fad4-40d3-98c5-21b8f0b5278b",
+    "id": "2d801612-0bfa-4014-92d6-9ca988ea7982",
     "type": "mcq",
-    "text": "What is the main purpose of encapsulation in OOP?",
+    "text": "What is the output of: cout << 5 + 3;",
     "timer": 30,
     "options": [
-      "To hide data from unauthorized access",
-      "To improve code readability",
-      "To reduce code size",
-      "To increase execution speed"
-    ],
-    "correctAnswer": 0,
-    "codeSnippet": null,
-    "matchMap": null
-  },
-  {
-    "id": "278464eb-eaf6-4c10-b44c-3b8c1c36f525",
-    "type": "mcq",
-    "text": "Which access specifier allows members to be accessed only within the class?",
-    "timer": 30,
-    "options": [
-      "public",
-      "private",
-      "protected",
-      "static"
-    ],
-    "correctAnswer": 1,
-    "codeSnippet": null,
-    "matchMap": null
-  },
-  {
-    "id": "2da27c6f-117a-43d2-9109-f1621f107746",
-    "type": "mcq",
-    "text": "What is inheritance in OOP?",
-    "timer": 30,
-    "options": [
-      "Creating multiple objects from a class",
-      "Deriving a new class from an existing class",
-      "Hiding implementation details",
-      "Binding data and functions together"
-    ],
-    "correctAnswer": 1,
-    "codeSnippet": null,
-    "matchMap": null
-  },
-  {
-    "id": "90e45cda-1b93-44e9-b025-0f20a45dd6bc",
-    "type": "mcq",
-    "text": "Which keyword is used to achieve polymorphism in C++?",
-    "timer": 30,
-    "options": [
-      "class",
-      "struct",
-      "virtual",
-      "static"
+      "5",
+      "3",
+      "8",
+      "15"
     ],
     "correctAnswer": 2,
     "codeSnippet": null,
     "matchMap": null
   },
   {
-    "id": "fbe2ac66-bcda-4ff6-b6a3-22106076e691",
+    "id": "2ce80587-ec91-47a1-af1a-62d526f8ac15",
+    "type": "mcq",
+    "text": "Which data type is used to store whole numbers in C++?",
+    "timer": 30,
+    "options": [
+      "float",
+      "char",
+      "int",
+      "string"
+    ],
+    "correctAnswer": 2,
+    "codeSnippet": null,
+    "matchMap": null
+  },
+  {
+    "id": "304ec425-2f4b-4267-a54c-f865dec13485",
     "type": "code",
     "text": "What will be the output of this code?",
-    "timer": 45,
+    "timer": 30,
     "options": [
-      "10",
-      "20",
-      "30",
-      "Compilation Error"
-    ],
-    "correctAnswer": 2,
-    "codeSnippet": "#include <iostream>\r\nusing namespace std;\r\n\r\nclass Base {\r\npublic:\r\n    int x = 10;\r\n};\r\n\r\nclass Derived : public Base {\r\npublic:\r\n    int x = 20;\r\n};\r\n\r\nint main() {\r\n    Derived d;\r\n    cout << d.x;\r\n    return 0;\r\n}",
-    "matchMap": null
-  },
-  {
-    "id": "8d3034c5-52c1-483e-854d-30de06e58c7a",
-    "type": "code",
-    "text": "What will be the output?",
-    "timer": 45,
-    "options": [
-      "Base Constructor",
-      "Derived Constructor",
-      "Both",
+      "Hello",
+      "World",
+      "Hello World",
       "Error"
     ],
     "correctAnswer": 2,
-    "codeSnippet": "#include <iostream>\r\nusing namespace std;\r\n\r\nclass Base {\r\npublic:\r\n    Base() {\r\n        cout << \"Base Constructor\";\r\n    }\r\n};\r\n\r\nclass Derived : public Base {\r\npublic:\r\n    Derived() {\r\n        cout << \"Derived Constructor\";\r\n    }\r\n};\r\n\r\nint main() {\r\n    Derived d;\r\n    return 0;\r\n}",
+    "codeSnippet": "#include <iostream>\r\nusing namespace std;\r\n\r\nint main() {\r\n    cout << \"Hello \" << \"World\";\r\n    return 0;\r\n}",
     "matchMap": null
   },
   {
-    "id": "f7089357-60b5-4cc5-ad29-0035a1bf42de",
-    "type": "code",
-    "text": "What is the output?",
-    "timer": 45,
-    "options": [
-      "5",
-      "10",
-      "15",
-      "20"
-    ],
-    "correctAnswer": 0,
-    "codeSnippet": "#include <iostream>\r\nusing namespace std;\r\n\r\nclass Calculator {\r\nprivate:\r\n    int value;\r\npublic:\r\n    Calculator(int v) : value(v) {}\r\n    int getValue() { return value; }\r\n};\r\n\r\nint main() {\r\n    Calculator calc(5);\r\n    cout << calc.getValue();\r\n    return 0;\r\n}",
-    "matchMap": null
-  },
-  {
-    "id": "eed59f68-2642-47e8-8618-dbecc7ffb684",
+    "id": "57b7ca7c-0648-47f9-9704-86c467fff8ff",
     "type": "mcq",
-    "text": "What is a constructor?",
+    "text": "What is the size of an int in C++ (typically)?",
     "timer": 30,
     "options": [
-      "A function that destroys objects",
-      "A function that initializes objects",
-      "A function that copies objects",
-      "A function that compares objects"
-    ],
-    "correctAnswer": 1,
-    "codeSnippet": null,
-    "matchMap": null
-  },
-  {
-    "id": "5ab6ee37-16a5-49cf-9279-d50b9bc023e3",
-    "type": "mcq",
-    "text": "Which type of inheritance is not supported in C++?",
-    "timer": 30,
-    "options": [
-      "Single",
-      "Multiple",
-      "Multilevel",
-      "Cyclic"
+      "2 bytes",
+      "4 bytes",
+      "8 bytes",
+      "Depends on system"
     ],
     "correctAnswer": 3,
     "codeSnippet": null,
     "matchMap": null
   },
   {
-    "id": "03b9d3d2-51f6-4d58-acbc-26b0c5528c1e",
+    "id": "73aceed0-3495-4c7c-8315-8dec865cfefe",
     "type": "code",
     "text": "What will be printed?",
-    "timer": 45,
-    "options": [
-      "Base::show()",
-      "Derived::show()",
-      "Both",
-      "Error"
-    ],
-    "correctAnswer": 1,
-    "codeSnippet": "#include <iostream>\r\nusing namespace std;\r\n\r\nclass Base {\r\npublic:\r\n    virtual void show() {\r\n        cout << \"Base::show()\";\r\n    }\r\n};\r\n\r\nclass Derived : public Base {\r\npublic:\r\n    void show() override {\r\n        cout << \"Derived::show()\";\r\n    }\r\n};\r\n\r\nint main() {\r\n    Base* ptr = new Derived();\r\n    ptr->show();\r\n    return 0;\r\n}",
-    "matchMap": null
-  },
-  {
-    "id": "60893fd5-507f-4e4b-81df-59f064a1108c",
-    "type": "mcq",
-    "text": "What is the difference between function overloading and overriding?",
     "timer": 30,
-    "options": [
-      "Overloading is compile-time, overriding is runtime",
-      "Overloading is runtime, overriding is compile-time",
-      "Both are compile-time",
-      "Both are runtime"
-    ],
-    "correctAnswer": 0,
-    "codeSnippet": null,
-    "matchMap": null
-  },
-  {
-    "id": "f6021895-ed26-4cd7-8cd2-09eba222cdd8",
-    "type": "mcq",
-    "text": "Which is true about abstract classes in C++?",
-    "timer": 30,
-    "options": [
-      "Cannot have any member functions",
-      "Must have at least one pure virtual function",
-      "Cannot be inherited",
-      "Must have all virtual functions"
-    ],
-    "correctAnswer": 1,
-    "codeSnippet": null,
-    "matchMap": null
-  },
-  {
-    "id": "1c96309b-6292-4b47-b7b0-f499fc478ab0",
-    "type": "code",
-    "text": "What is the output?",
-    "timer": 45,
     "options": [
       "0",
       "1",
@@ -191,187 +71,7 @@
       "3"
     ],
     "correctAnswer": 1,
-    "codeSnippet": "#include <iostream>\r\nusing namespace std;\r\n\r\nclass Counter {\r\n    static int count;\r\npublic:\r\n    Counter() { count++; }\r\n    static int getCount() { return count; }\r\n};\r\n\r\nint Counter::count = 0;\r\n\r\nint main() {\r\n    Counter c1, c2;\r\n    cout << Counter::getCount();\r\n    return 0;\r\n}",
-    "matchMap": null
-  },
-  {
-    "id": "48b816df-6f70-4f65-bc7c-68147b5d3885",
-    "type": "mcq",
-    "text": "What is a destructor?",
-    "timer": 30,
-    "options": [
-      "Called when object is created",
-      "Called when object goes out of scope",
-      "Called when object is copied",
-      "Called when object is assigned"
-    ],
-    "correctAnswer": 1,
-    "codeSnippet": null,
-    "matchMap": null
-  },
-  {
-    "id": "ce738227-017e-4f76-9b64-d6cb4ea69055",
-    "type": "mcq",
-    "text": "What is the 'this' pointer?",
-    "timer": 30,
-    "options": [
-      "Pointer to current object",
-      "Pointer to base class",
-      "Pointer to derived class",
-      "Pointer to static members"
-    ],
-    "correctAnswer": 0,
-    "codeSnippet": null,
-    "matchMap": null
-  },
-  {
-    "id": "73fcf7a1-a4b0-4fde-95bc-b16be94f5652",
-    "type": "code",
-    "text": "What will be printed?",
-    "timer": 45,
-    "options": [
-      "10 20",
-      "20 10",
-      "10 10",
-      "20 20"
-    ],
-    "correctAnswer": 0,
-    "codeSnippet": "#include <iostream>\r\nusing namespace std;\r\n\r\nclass Parent {\r\npublic:\r\n    int x = 10;\r\n};\r\n\r\nclass Child : public Parent {\r\npublic:\r\n    int x = 20;\r\n    void display() {\r\n        cout << Parent::x << \" \" << x;\r\n    }\r\n};\r\n\r\nint main() {\r\n    Child c;\r\n    c.display();\r\n    return 0;\r\n}",
-    "matchMap": null
-  },
-  {
-    "id": "65005c16-8589-4361-88d9-456b47f27ee1",
-    "type": "mcq",
-    "text": "What is method overriding?",
-    "timer": 30,
-    "options": [
-      "Defining multiple methods with same name",
-      "Redefining base class method in derived class",
-      "Calling method multiple times",
-      "Hiding method implementation"
-    ],
-    "correctAnswer": 1,
-    "codeSnippet": null,
-    "matchMap": null
-  },
-  {
-    "id": "021460a6-b158-4f39-b624-3417c87f19b7",
-    "type": "mcq",
-    "text": "Which access specifier is used for inheritance by default in C++?",
-    "timer": 30,
-    "options": [
-      "public",
-      "private",
-      "protected",
-      "depends on class type"
-    ],
-    "correctAnswer": 1,
-    "codeSnippet": null,
-    "matchMap": null
-  },
-  {
-    "id": "fc5c9cba-7e7f-4583-8fcf-6f2c848b818a",
-    "type": "code",
-    "text": "What is the output?",
-    "timer": 45,
-    "options": [
-      "Base",
-      "Derived",
-      "Both Base and Derived",
-      "Error"
-    ],
-    "correctAnswer": 1,
-    "codeSnippet": "#include <iostream>\r\nusing namespace std;\r\n\r\nclass Base {\r\npublic:\r\n    virtual void display() {\r\n        cout << \"Base\";\r\n    }\r\n};\r\n\r\nclass Derived : public Base {\r\npublic:\r\n    void display() {\r\n        cout << \"Derived\";\r\n    }\r\n};\r\n\r\nint main() {\r\n    Base* b = new Derived();\r\n    b->display();\r\n    return 0;\r\n}",
-    "matchMap": null
-  },
-  {
-    "id": "dc2045f5-12ed-47ee-b69c-789e9aa53836",
-    "type": "mcq",
-    "text": "What is a friend function?",
-    "timer": 30,
-    "options": [
-      "A function that can access private members",
-      "A function that cannot access any members",
-      "A member function of a class",
-      "A static function"
-    ],
-    "correctAnswer": 0,
-    "codeSnippet": null,
-    "matchMap": null
-  },
-  {
-    "id": "f6ad3f08-5e92-4ad6-a3f2-56f2d9cff680",
-    "type": "mcq",
-    "text": "What is operator overloading?",
-    "timer": 30,
-    "options": [
-      "Changing operator behavior for user-defined types",
-      "Creating new operators",
-      "Deleting operators",
-      "Hiding operators"
-    ],
-    "correctAnswer": 0,
-    "codeSnippet": null,
-    "matchMap": null
-  },
-  {
-    "id": "9d8fcb33-6078-42b3-a46e-d206049a883d",
-    "type": "code",
-    "text": "What will be printed?",
-    "timer": 45,
-    "options": [
-      "5",
-      "10",
-      "15",
-      "Compilation Error"
-    ],
-    "correctAnswer": 3,
-    "codeSnippet": "#include <iostream>\r\nusing namespace std;\r\n\r\nclass Test {\r\nprivate:\r\n    int value = 5;\r\npublic:\r\n    friend void showValue(Test t);\r\n};\r\n\r\nvoid showValue(Test t) {\r\n    cout << t.value;\r\n}\r\n\r\nint main() {\r\n    Test t;\r\n    showValue(t);\r\n    return 0;\r\n}",
-    "matchMap": null
-  },
-  {
-    "id": "1a20f345-e3aa-49ee-9c09-54d57e24699f",
-    "type": "mcq",
-    "text": "What is data abstraction?",
-    "timer": 30,
-    "options": [
-      "Hiding implementation details",
-      "Showing all implementation",
-      "Making data public",
-      "Removing data"
-    ],
-    "correctAnswer": 0,
-    "codeSnippet": null,
-    "matchMap": null
-  },
-  {
-    "id": "794a910c-2fff-472b-a01b-8fc72231d911",
-    "type": "mcq",
-    "text": "Which is not a pillar of OOP?",
-    "timer": 30,
-    "options": [
-      "Encapsulation",
-      "Inheritance",
-      "Polymorphism",
-      "Compilation"
-    ],
-    "correctAnswer": 3,
-    "codeSnippet": null,
-    "matchMap": null
-  },
-  {
-    "id": "7db4a951-946b-46be-a79b-a4d38769cbb0",
-    "type": "code",
-    "text": "What is the output?",
-    "timer": 45,
-    "options": [
-      "Constructor called",
-      "Destructor called",
-      "Both",
-      "Nothing"
-    ],
-    "correctAnswer": 2,
-    "codeSnippet": "#include <iostream>\r\nusing namespace std;\r\n\r\nclass Demo {\r\npublic:\r\n    Demo() {\r\n        cout << \"Constructor called\";\r\n    }\r\n    ~Demo() {\r\n        cout << \"Destructor called\";\r\n    }\r\n};\r\n\r\nint main() {\r\n    Demo d;\r\n    return 0;\r\n}",
+    "codeSnippet": "#include <iostream>\r\nusing namespace std;\r\n\r\nint main() {\r\n    int x = 0;\r\n    x++;\r\n    cout << x;\r\n    return 0;\r\n}",
     "matchMap": null
   }
 ]

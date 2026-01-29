@@ -83,8 +83,17 @@ socket.on('time_up', () => {
     
     // Submit any pending match answer
     if (currentQuestion && currentQuestion.type === 'match' && Object.keys(matchPairs).length > 0) {
-        submitAnswer();
+        submitAnswer(matchPairs);
     }
+});
+
+socket.on('answer_result', (data) => {
+    // Show right/wrong + points after every question (no answer key shown)
+    const correct = !!data.correct;
+    const points = Number.isFinite(data.points) ? data.points : 0;
+    document.getElementById('answerStatus').innerHTML = correct
+        ? `<p class="answer-confirmed">✓ Correct (+${points})</p>`
+        : `<p class="time-up">✗ Wrong (+${points})</p>`;
 });
 
 socket.on('leaderboard_update', (leaderboard) => {
@@ -338,7 +347,10 @@ function displayLeaderboard(leaderboard) {
         return `
             <div class="leaderboard-entry ${index < 3 ? 'top-three' : ''}">
                 <span class="rank">${medal} #${entry.rank}</span>
-                <span class="name">${entry.name}</span>
+                <span class="name">
+                    <strong>${entry.name}</strong>
+                    <span class="muted">(${entry.rollNumber || '-'})</span>
+                </span>
                 <span class="score">${entry.score} pts</span>
             </div>
         `;
@@ -352,7 +364,10 @@ function displayFinalLeaderboard(leaderboard) {
         return `
             <div class="leaderboard-entry ${index < 3 ? 'top-three' : ''}">
                 <span class="rank">${medal} #${entry.rank}</span>
-                <span class="name">${entry.name}</span>
+                <span class="name">
+                    <strong>${entry.name}</strong>
+                    <span class="muted">(${entry.rollNumber || '-'})</span>
+                </span>
                 <span class="score">${entry.score} pts</span>
             </div>
         `;

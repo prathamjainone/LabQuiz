@@ -1,5 +1,6 @@
 const socket = io();
 let currentQuestions = [];
+let isAdminAuthed = false;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -28,6 +29,8 @@ function setupEventListeners() {
     document.getElementById('startGameBtn').addEventListener('click', startGame);
     document.getElementById('nextQuestionBtn').addEventListener('click', nextQuestion);
     document.getElementById('forceStopBtn').addEventListener('click', forceStop);
+    document.getElementById('downloadLeaderboardBtn').addEventListener('click', downloadLeaderboard);
+    document.getElementById('adminLoginBtn').addEventListener('click', adminLogin);
     
     // MCQ options
     document.getElementById('addLeftItem').addEventListener('click', () => addMatchItem('left'));
@@ -48,15 +51,25 @@ function setupSocketListeners() {
     socket.on('admin:questions_loaded', (data) => {
         currentQuestions = data.questions;
         displayQuestions();
-        // Only show alert if questions were actually loaded (not on initial empty load)
-        if (currentQuestions.length > 0) {
-            alert('Questions loaded successfully!');
-        }
+        if (currentQuestions.length > 0) setStatus(`Loaded ${currentQuestions.length} question(s).`, 'success', 2500);
         document.getElementById('startGameBtn').disabled = currentQuestions.length === 0;
     });
 
     socket.on('admin:error', (data) => {
-        alert('Error: ' + data.message);
+        setStatus(data.message || 'Admin error', 'error', 4000);
+    });
+
+    socket.on('admin:auth_result', (data) => {
+        if (data.success) {
+            isAdminAuthed = true;
+            document.getElementById('adminAuthModal').style.display = 'none';
+            setStatus('Admin unlocked.', 'success', 2000);
+            document.getElementById('downloadLeaderboardBtn').disabled = false;
+            // load questions into server state once authenticated (if any exist)
+            if (currentQuestions.length > 0) socket.emit('admin:load_questions');
+        } else {
+            showAdminAuthError(data.message || 'Invalid PIN');
+        }
     });
 
     socket.on('admin:state', (data) => {
@@ -70,6 +83,36 @@ function setupSocketListeners() {
     socket.on('leaderboard_update', (data) => {
         updateLeaderboard(data);
     });
+
+    socket.on('admin:question_progress', (data) => {
+        // ensures question number updates instantly even if polling lags
+        document.getElementById('currentQuestion').textContent = data.currentQuestionIndex + 1;
+        document.getElementById('totalQuestions').textContent = data.totalQuestions;
+    });
+}
+
+function setStatus(message, type = 'info', autoHideMs = 0) {
+    const bar = document.getElementById('adminStatusBar');
+    bar.textContent = message;
+    bar.className = `status-message ${type}`;
+    bar.style.display = 'block';
+    if (autoHideMs > 0) {
+        setTimeout(() => {
+            bar.style.display = 'none';
+        }, autoHideMs);
+    }
+}
+
+function showAdminAuthError(message) {
+    const el = document.getElementById('adminAuthError');
+    el.textContent = message;
+    el.style.display = 'block';
+}
+
+function adminLogin() {
+    const pin = document.getElementById('adminPinInput').value;
+    document.getElementById('adminAuthError').style.display = 'none';
+    socket.emit('admin:auth', { pin });
 }
 
 // CSV Upload
@@ -123,10 +166,10 @@ async function loadQuestions() {
         document.getElementById('startGameBtn').disabled = currentQuestions.length === 0;
         
         // Also load questions into server's game state
-        socket.emit('admin:load_questions');
+        if (isAdminAuthed && currentQuestions.length > 0) socket.emit('admin:load_questions');
     } catch (error) {
         console.error('Error loading questions:', error);
-        alert('Error loading questions');
+        setStatus('Failed to load questions.', 'error', 3000);
     }
 }
 
@@ -139,7 +182,7 @@ async function loadQuestionsSilent() {
         document.getElementById('startGameBtn').disabled = currentQuestions.length === 0;
         
         // Only load into server if there are questions
-        if (currentQuestions.length > 0) {
+        if (isAdminAuthed && currentQuestions.length > 0) {
             socket.emit('admin:load_questions');
         }
     } catch (error) {
@@ -237,7 +280,7 @@ async function addQuestion() {
     const timer = parseInt(document.getElementById('questionTimer').value) || 30;
 
     if (!text) {
-        alert('Please enter question text');
+        setStatus('Please enter question text.', 'error', 2500);
         return;
     }
 
@@ -254,7 +297,7 @@ async function addQuestion() {
         const correctAnswer = parseInt(document.getElementById('mcqCorrect').value);
 
         if (options.length !== 4) {
-            alert('Please provide exactly 4 options');
+            setStatus('Please provide exactly 4 options.', 'error', 3000);
             return;
         }
         if (isNaN(correctAnswer) || correctAnswer < 0 || correctAnswer > 3) {
@@ -268,7 +311,7 @@ async function addQuestion() {
         if (type === 'code') {
             const codeSnippet = document.getElementById('codeSnippet').value.trim();
             if (!codeSnippet) {
-                alert('Please enter code snippet');
+                setStatus('Please enter code snippet.', 'error', 3000);
                 return;
             }
             questionData.codeSnippet = codeSnippet;
@@ -279,7 +322,7 @@ async function addQuestion() {
         const matchSelects = Array.from(document.querySelectorAll('#matchPairs .match-select'));
 
         if (leftItems.length === 0 || rightItems.length === 0) {
-            alert('Please add items to both columns');
+            setStatus('Please add items to both columns.', 'error', 3000);
             return;
         }
 
@@ -292,7 +335,7 @@ async function addQuestion() {
         });
 
         if (Object.keys(matchMap).length === 0) {
-            alert('Please create at least one match pair');
+            setStatus('Please create at least one match pair.', 'error', 3000);
             return;
         }
 
@@ -324,10 +367,12 @@ async function addQuestion() {
         });
         updateMatchPairs();
         
-        alert('Question added successfully!');
+        setStatus('Question added.', 'success', 2000);
+        // auto-sync server after adding (if authed)
+        if (isAdminAuthed) socket.emit('admin:load_questions');
     } catch (error) {
         console.error('Error adding question:', error);
-        alert('Error adding question');
+        setStatus('Error adding question.', 'error', 3000);
     }
 }
 
@@ -350,7 +395,11 @@ function displayQuestions() {
 // Game Control
 function startGame() {
     if (currentQuestions.length === 0) {
-        alert('Please load questions first');
+        setStatus('No questions found. Upload CSV or add questions first.', 'error', 3500);
+        return;
+    }
+    if (!isAdminAuthed) {
+        setStatus('Admin locked. Please login first.', 'error', 3000);
         return;
     }
     
@@ -363,6 +412,7 @@ function startGame() {
         document.getElementById('startGameBtn').disabled = true;
         document.getElementById('nextQuestionBtn').disabled = false;
         document.getElementById('forceStopBtn').disabled = false;
+        setStatus('Game started.', 'success', 2000);
     }, 100);
 }
 
@@ -376,6 +426,7 @@ function forceStop() {
         document.getElementById('startGameBtn').disabled = false;
         document.getElementById('nextQuestionBtn').disabled = true;
         document.getElementById('forceStopBtn').disabled = true;
+        setStatus('Game stopped.', 'info', 2000);
     }
 }
 
@@ -409,10 +460,18 @@ function updateLeaderboard(leaderboard) {
     container.innerHTML = leaderboard.map(p => `
         <div class="leaderboard-item">
             <span class="rank">#${p.rank}</span>
-            <span class="name">${p.name}</span>
+            <span class="name">
+                <strong>${p.name}</strong>
+                <span class="muted">(${p.rollNumber || '-'})</span>
+            </span>
             <span class="score">${p.score} pts</span>
         </div>
     `).join('');
+}
+
+function downloadLeaderboard() {
+    // downloads the latest leaderboard snapshot from server
+    window.location.href = '/api/leaderboard.csv';
 }
 
 // Request state update
