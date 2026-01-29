@@ -19,7 +19,7 @@ function showScreen(screenId) {
 document.getElementById('joinBtn').addEventListener('click', () => {
     const name = document.getElementById('fullNameInput').value.trim();
     const rollNumber = document.getElementById('rollNumberInput').value.trim().toUpperCase();
-    
+
     if (!name) {
         showError('Please enter your Full Name');
         return;
@@ -28,7 +28,7 @@ document.getElementById('joinBtn').addEventListener('click', () => {
         showError('Please enter your Roll Number');
         return;
     }
-    
+
     socket.emit('join_request', { name, rollNumber });
 });
 
@@ -63,11 +63,11 @@ socket.on('new_question', (question) => {
     timeRemaining = totalTime;
     matchPairs = {};
     activeLeftItem = null;
-    
+
     showScreen('gameScreen');
     displayQuestion(question);
     startTimer();
-    
+
     // Hide time up overlay if visible
     document.getElementById('timeUpOverlay').style.display = 'none';
 });
@@ -75,12 +75,12 @@ socket.on('new_question', (question) => {
 socket.on('time_up', () => {
     clearTimer();
     showTimeUpOverlay();
-    
+
     // Disable all inputs
     document.querySelectorAll('button, input, select').forEach(el => {
         el.disabled = true;
     });
-    
+
     // Submit any pending match answer
     if (currentQuestion && currentQuestion.type === 'match' && Object.keys(matchPairs).length > 0) {
         submitAnswer(matchPairs);
@@ -117,13 +117,18 @@ socket.on('game:stopped', () => {
 function displayQuestion(question) {
     const container = document.getElementById('questionContainer');
     container.innerHTML = '';
-    
+
+    // Update question number
+    if (question.currentQuestion && question.totalQuestions) {
+        document.getElementById('questionNumber').textContent = `Question ${question.currentQuestion} of ${question.totalQuestions}`;
+    }
+
     // Question text
     const questionText = document.createElement('div');
     questionText.className = 'question-text';
     questionText.innerHTML = `<h3>${question.text}</h3>`;
     container.appendChild(questionText);
-    
+
     // Code snippet (for 'code' type)
     if (question.codeSnippet) {
         const codeBlock = document.createElement('div');
@@ -140,22 +145,22 @@ function displayQuestion(question) {
             Prism.highlightElement(code);
         }
     }
-    
+
     // Answer interface based on type
     const answerContainer = document.createElement('div');
     answerContainer.className = 'answer-container';
-    
+
     if (question.type === 'mcq' || question.type === 'code') {
         answerContainer.innerHTML = createMcqInterface(question);
     } else if (question.type === 'match') {
         answerContainer.innerHTML = createMatchInterface(question);
     }
-    
+
     container.appendChild(answerContainer);
-    
+
     // Reset answer status
     document.getElementById('answerStatus').innerHTML = '';
-    
+
     // Enable inputs
     document.querySelectorAll('button, input, select').forEach(el => {
         el.disabled = false;
@@ -180,10 +185,10 @@ function createMatchInterface(question) {
     const matchMap = question.matchMap || {};
     const leftItems = Object.keys(matchMap);
     const rightItems = Object.values(matchMap);
-    
+
     // Create unique right items list
     const uniqueRightItems = [...new Set(rightItems)];
-    
+
     let html = '<div class="match-container">';
     html += '<div class="match-column"><h4>Left</h4>';
     leftItems.forEach((item, index) => {
@@ -196,7 +201,7 @@ function createMatchInterface(question) {
         `;
     });
     html += '</div>';
-    
+
     html += '<div class="match-column"><h4>Right</h4>';
     uniqueRightItems.forEach((item, index) => {
         html += `
@@ -207,14 +212,14 @@ function createMatchInterface(question) {
     });
     html += '</div></div>';
     html += '<button class="btn btn-primary submit-match" style="margin-top: 15px;">Submit Answer</button>';
-    
+
     return html;
 }
 
 // Answer handling
 document.addEventListener('click', (e) => {
     if (hasAnswered || !currentQuestion) return;
-    
+
     // MCQ/Code answer
     if (e.target.closest('.mcq-btn')) {
         const btn = e.target.closest('.mcq-btn');
@@ -224,17 +229,17 @@ document.addEventListener('click', (e) => {
         document.querySelectorAll('.mcq-btn').forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
     }
-    
+
     // Match following - left item click
     if (e.target.closest('.match-item[data-side="left"]')) {
         const leftItem = e.target.closest('.match-item[data-side="left"]');
         const leftValue = leftItem.dataset.item;
-        
+
         // Remove previous selection for this left item
         document.querySelectorAll('.match-item[data-side="right"]').forEach(item => {
             item.classList.remove('selected');
         });
-        
+
         // Highlight this left item
         document.querySelectorAll('.match-item[data-side="left"]').forEach(item => {
             item.classList.remove('active');
@@ -242,22 +247,22 @@ document.addEventListener('click', (e) => {
         leftItem.classList.add('active');
         activeLeftItem = leftValue;
     }
-    
+
     // Match following - right item click (after left is selected)
     if (e.target.closest('.match-item[data-side="right"]')) {
         if (!activeLeftItem) return;
-        
+
         const rightItem = e.target.closest('.match-item[data-side="right"]');
         const rightValue = rightItem.dataset.item;
-        
+
         // Update selected match display
         const selectedSpan = document.querySelector(`.match-selected[data-left-item="${activeLeftItem}"]`);
         selectedSpan.textContent = rightValue;
         selectedSpan.dataset.rightItem = rightValue;
-        
+
         // Store the pair
         matchPairs[activeLeftItem] = rightValue;
-        
+
         // Visual feedback with color coding
         const colorIndex = Object.keys(matchPairs).length - 1;
         const colors = ['#28a745', '#007acc', '#ffc107', '#dc3545', '#6f42c1', '#20c997'];
@@ -265,14 +270,14 @@ document.addEventListener('click', (e) => {
         rightItem.style.borderColor = color;
         rightItem.style.backgroundColor = color + '20';
         document.querySelector(`.match-item[data-side="left"][data-item="${activeLeftItem}"]`).style.borderColor = color;
-        
+
         // Reset active state
         document.querySelectorAll('.match-item[data-side="left"]').forEach(item => {
             item.classList.remove('active');
         });
         activeLeftItem = null;
     }
-    
+
     // Submit match
     if (e.target.closest('.submit-match')) {
         if (Object.keys(matchPairs).length === 0) {
@@ -285,12 +290,12 @@ document.addEventListener('click', (e) => {
 
 function submitAnswer(answerPayload) {
     if (hasAnswered) return;
-    
+
     socket.emit('submit_answer', {
         q_id: currentQuestion.id,
         answerPayload: answerPayload
     });
-    
+
     hasAnswered = true;
     document.getElementById('answerStatus').innerHTML = '<p class="answer-confirmed">✓ Answer submitted!</p>';
 }
@@ -312,7 +317,7 @@ function updateTimer() {
     const progress = (timeRemaining / totalTime) * 100;
     document.getElementById('timerProgress').style.width = `${progress}%`;
     document.getElementById('timerText').textContent = `${timeRemaining}s`;
-    
+
     // Color coding - gradient from green to red
     const progressBar = document.getElementById('timerProgress');
     if (progress < 20) {

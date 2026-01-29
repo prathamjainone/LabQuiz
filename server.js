@@ -13,8 +13,14 @@ const io = socketIo(server);
 
 const PORT = process.env.PORT || 3000;
 const ADMIN_PIN = process.env.ADMIN_PIN || 'labquiz';
-const DATA_DIR = path.join(__dirname, 'data');
-const UPLOADS_DIR = path.join(__dirname, 'uploads');
+
+// When running as an executable (pkg), we want data to be stored next to the exe,
+// not inside the read-only snapshot.
+const isPkg = typeof process.pkg !== 'undefined';
+const BASE_DIR = isPkg ? path.dirname(process.execPath) : __dirname;
+
+const DATA_DIR = path.join(BASE_DIR, 'data');
+const UPLOADS_DIR = path.join(BASE_DIR, 'uploads');
 
 // Ensure directories exist
 (async () => {
@@ -28,8 +34,8 @@ const UPLOADS_DIR = path.join(__dirname, 'uploads');
 
 // Middleware
 app.use(express.json());
-app.use(express.static('public'));
-app.use('/uploads', express.static('uploads'));
+app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(UPLOADS_DIR));
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -152,7 +158,7 @@ app.post('/api/questions/upload-csv', upload.single('csv'), async (req, res) => 
   const filePath = req.file.path;
 
   const fsStream = require('fs').createReadStream;
-  
+
   return new Promise((resolve, reject) => {
     fsStream(filePath)
       .pipe(csv())
@@ -186,7 +192,7 @@ app.post('/api/questions/upload-csv', upload.single('csv'), async (req, res) => 
         try {
           const existingQuestions = await loadQuestions();
           const mode = req.body.mode || 'append'; // 'append' or 'replace'
-          
+
           if (mode === 'replace') {
             await saveQuestions(questions);
           } else {
@@ -196,9 +202,9 @@ app.post('/api/questions/upload-csv', upload.single('csv'), async (req, res) => 
 
           // Clean up uploaded file
           await fs.unlink(filePath);
-          
-          res.json({ 
-            success: true, 
+
+          res.json({
+            success: true,
             message: `Uploaded ${questions.length} questions`,
             count: questions.length
           });
@@ -311,9 +317,9 @@ io.on('connection', (socket) => {
 
     // Format check
     if (!ROLL_NUMBER_PATTERN.test(rollNumber)) {
-      socket.emit('login_ack', { 
-        success: false, 
-        msg: 'Invalid Roll Number format. Use only numbers and uppercase letters.' 
+      socket.emit('login_ack', {
+        success: false,
+        msg: 'Invalid Roll Number format. Use only numbers and uppercase letters.'
       });
       return;
     }
@@ -323,9 +329,9 @@ io.on('connection', (socket) => {
     if (existingSocketId && existingSocketId !== socket.id) {
       const existingPlayer = gameState.players.get(existingSocketId);
       if (existingPlayer) {
-        socket.emit('login_ack', { 
-          success: false, 
-          msg: 'This Roll Number is already in use. Please use a different one.' 
+        socket.emit('login_ack', {
+          success: false,
+          msg: 'This Roll Number is already in use. Please use a different one.'
         });
         return;
       }
@@ -353,8 +359,8 @@ io.on('connection', (socket) => {
 
     gameState.rollNumberMap.set(rollNumber, socket.id);
 
-    socket.emit('login_ack', { 
-      success: true, 
+    socket.emit('login_ack', {
+      success: true,
       msg: 'Successfully joined the game',
       score: previousScore
     });
@@ -370,7 +376,9 @@ io.on('connection', (socket) => {
         text: question.text,
         options: question.options,
         codeSnippet: question.codeSnippet,
-        duration: question.timer
+        duration: question.timer,
+        currentQuestion: gameState.currentQuestionIndex + 1,
+        totalQuestions: gameState.questions.length
       };
       socket.emit('new_question', sanitizedQuestion);
     }
@@ -437,7 +445,9 @@ function startQuestion(index) {
     text: question.text,
     options: question.options,
     codeSnippet: question.codeSnippet,
-    duration: question.timer
+    duration: question.timer,
+    currentQuestion: index + 1,
+    totalQuestions: gameState.questions.length
   };
 
   io.emit('new_question', sanitizedQuestion);
@@ -445,7 +455,7 @@ function startQuestion(index) {
   // Start countdown
   gameState.timer = setInterval(() => {
     gameState.timeRemaining--;
-    
+
     if (gameState.timeRemaining <= 0) {
       clearInterval(gameState.timer);
       gameState.timer = null;
@@ -481,15 +491,18 @@ function endQuestion() {
 
   gameState.lastLeaderboard = fullLeaderboard;
 
-  // Broadcast leaderboard (Top 5)
-  io.emit('leaderboard_update', fullLeaderboard.slice(0, 5));
+  // Wait 3 seconds to let students see their result, THEN show leaderboard
+  setTimeout(() => {
+    // Broadcast leaderboard (Top 5)
+    io.emit('leaderboard_update', fullLeaderboard.slice(0, 5));
+  }, 3000);
 
-  // Wait 5 seconds then move to next question
+  // Wait 8 seconds (3s result + 5s leaderboard) then move to next question
   setTimeout(() => {
     if (gameState.status === 'playing') {
       startQuestion(gameState.currentQuestionIndex + 1);
     }
-  }, 5000);
+  }, 8000);
 }
 
 function calculateScoresAndReturnResults() {
@@ -509,10 +522,10 @@ function calculateScoresAndReturnResults() {
 
     if (question.type === 'mcq' || question.type === 'code') {
       // Both MCQ and Code use integer index answer
-      const userAnswer = typeof answerData.answerPayload === 'number' 
-        ? answerData.answerPayload 
+      const userAnswer = typeof answerData.answerPayload === 'number'
+        ? answerData.answerPayload
         : parseInt(answerData.answerPayload);
-      
+
       if (userAnswer === question.correctAnswer) {
         points = 10;
         correct = true;

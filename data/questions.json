@@ -1,6 +1,6 @@
 [
   {
-    "id": "2d801612-0bfa-4014-92d6-9ca988ea7982",
+    "id": "3f0bc247-2a12-4ae3-8a60-66ce70f26a12",
     "type": "mcq",
     "text": "What is the output of: cout << 5 + 3;",
     "timer": 30,
@@ -15,7 +15,7 @@
     "matchMap": null
   },
   {
-    "id": "2ce80587-ec91-47a1-af1a-62d526f8ac15",
+    "id": "790f568a-00d0-473d-a44c-f65799f500d0",
     "type": "mcq",
     "text": "Which data type is used to store whole numbers in C++?",
     "timer": 30,
@@ -30,7 +30,7 @@
     "matchMap": null
   },
   {
-    "id": "304ec425-2f4b-4267-a54c-f865dec13485",
+    "id": "82ab50ab-b2ca-4e56-a7f6-dea97e149c44",
     "type": "code",
     "text": "What will be the output of this code?",
     "timer": 30,
@@ -41,11 +41,11 @@
       "Error"
     ],
     "correctAnswer": 2,
-    "codeSnippet": "#include <iostream>\r\nusing namespace std;\r\n\r\nint main() {\r\n    cout << \"Hello \" << \"World\";\r\n    return 0;\r\n}",
+    "codeSnippet": "#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << \"Hello \" << \"World\";\n    return 0;\n}",
     "matchMap": null
   },
   {
-    "id": "57b7ca7c-0648-47f9-9704-86c467fff8ff",
+    "id": "c103a246-6e20-4171-97d2-d9cf0058850d",
     "type": "mcq",
     "text": "What is the size of an int in C++ (typically)?",
     "timer": 30,
@@ -60,7 +60,7 @@
     "matchMap": null
   },
   {
-    "id": "73aceed0-3495-4c7c-8315-8dec865cfefe",
+    "id": "e684a238-bd51-4d04-af3d-f387fe8878cf",
     "type": "code",
     "text": "What will be printed?",
     "timer": 30,
@@ -71,7 +71,7 @@
       "3"
     ],
     "correctAnswer": 1,
-    "codeSnippet": "#include <iostream>\r\nusing namespace std;\r\n\r\nint main() {\r\n    int x = 0;\r\n    x++;\r\n    cout << x;\r\n    return 0;\r\n}",
+    "codeSnippet": "#include <iostream>\nusing namespace std;\n\nint main() {\n    int x = 0;\n    x++;\n    cout << x;\n    return 0;\n}",
     "matchMap": null
   }
 ]

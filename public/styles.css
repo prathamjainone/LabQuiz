@@ -383,13 +383,13 @@ header h1 {
 
 /* Student Interface */
 .screen {
-    display: none;
+    display: none !important;
     min-height: 100vh;
     padding: 20px;
 }
 
 .screen.active {
-    display: block;
+    display: block !important;
 }
 
 .join-container, .waiting-container, .final-container {
