@@ -491,3 +491,4 @@ server.listen(PORT, () => {
   console.log(`\nTo access from other devices on LAN, use your local IP address:`);
   console.log(`Example: http://192.168.1.50:${PORT}`);
 });
+
