@@ -3,7 +3,6 @@ node_modules/
 .DS_Store
 uploads/
 data/quizzes.json
-data/questions.json
 .env
 demo_5_questions.csv
 demo_oops_questions.csv
