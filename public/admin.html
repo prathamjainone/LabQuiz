@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
 </head>
+
 <body>
     <div class="container">
         <header>
@@ -44,7 +46,8 @@
                 <div class="form-group">
                     <label for="csvFile">Upload CSV File:</label>
                     <input type="file" id="csvFile" accept=".csv" class="form-control">
-                    <small>CSV Format: type, question, option1, option2, option3, option4, correctAnswer, timer, codeSnippet</small>
+                    <small>CSV Format: level, type, question, option1, option2, option3, option4, correctAnswer, timer,
+                        codeSnippet</small>
                 </div>
                 <div class="form-group">
                     <label>
@@ -60,7 +63,7 @@
 
             <div class="quiz-section">
                 <h2>Add Single Question</h2>
-                
+
                 <div class="form-group">
                     <label for="questionType">Question Type:</label>
                     <select id="questionType" class="form-control">
@@ -72,7 +75,8 @@
 
                 <div class="form-group">
                     <label for="questionText">Question Text:</label>
-                    <textarea id="questionText" class="form-control" rows="3" placeholder="Enter your question..."></textarea>
+                    <textarea id="questionText" class="form-control" rows="3"
+                        placeholder="Enter your question..."></textarea>
                 </div>
 
                 <div class="form-group">
@@ -114,7 +118,8 @@
                 <div id="codeFields" class="question-type-fields" style="display: none;">
                     <div class="form-group">
                         <label for="codeSnippet">Code Snippet:</label>
-                        <textarea id="codeSnippet" class="form-control code-input" rows="15" placeholder="Paste code here..."></textarea>
+                        <textarea id="codeSnippet" class="form-control code-input" rows="15"
+                            placeholder="Paste code here..."></textarea>
                     </div>
                 </div>
 
@@ -161,15 +166,21 @@
         <div id="game-control" class="tab-content">
             <div class="game-control-panel">
                 <h2>Game Control</h2>
-                
+
                 <div class="lobby-section">
                     <h3>Lobby</h3>
                     <div id="playersList" class="players-list">
                         <p class="empty-state">No players joined yet</p>
                     </div>
                     <div class="control-buttons">
-                        <button id="startGameBtn" class="btn btn-success" disabled>Start Game</button>
-                        <button id="nextQuestionBtn" class="btn btn-warning" disabled>Next Question</button>
+                        <button id="startRound1Btn" class="btn btn-primary" style="margin-right:5px;" disabled>Start
+                            Round 1</button>
+                        <button id="startRound2Btn" class="btn btn-warning" style="margin-right:5px;" disabled>Start
+                            Round 2</button>
+                        <button id="startRound3Btn" class="btn btn-danger" disabled>Start Round 3</button>
+                    </div>
+                    <div class="control-buttons" style="margin-top:10px;">
+                        <button id="nextQuestionBtn" class="btn btn-secondary" disabled>Next Question</button>
                         <button id="forceStopBtn" class="btn btn-danger" disabled>Force Stop</button>
                     </div>
                 </div>
@@ -198,7 +209,9 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
     <script src="admin.js"></script>
 </body>
+
 </html>

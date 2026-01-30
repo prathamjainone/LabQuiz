@@ -1,0 +1,31 @@
+level,type,question,option1,option2,option3,option4,correctAnswer,timer,codeSnippet
+1,mcq,What is 5 + 5?,8,9,10,11,2,30,
+1,mcq,What represents the structure of a web page?,HTML,CSS,JS,SQL,0,30,
+1,mcq,Which tag is used for a link?,<p>,<a>,<div>,<span>,1,30,
+1,mcq,CSS stands for?,Computer Style Sheet,Cascading Style Sheet,Creative Style System,Colorful Style Sheet,1,30,
+1,mcq,Which IS NOT a programming language?,Python,Java,HTML,C++,2,30,
+1,mcq,Which protocol is used for web pages?,FTP,SMTP,HTTP,SSH,2,30,
+1,mcq,What is the binary of 1?,0,1,10,11,1,30,
+1,mcq,A boolean has how many values?,1,2,3,Infinite,1,30,
+1,mcq,Which bracket is used for arrays in JS?,{},[],(),<>,1,30,
+1,mcq,Command to list files in Linux?,cd,mv,ls,cp,2,30,
+2,mcq,Which is a NoSQL database?,MySQL,PostgreSQL,MongoDB,SQLite,2,40,
+2,mcq,Time complexity of binary search?,O(n),O(1),O(log n),O(n*n),2,40,
+2,mcq,Keyword to declare a constant in JS?,var,let,const,static,2,40,
+2,mcq,Default port for HTTP?,80,443,21,22,0,40,
+2,mcq,What is a closure?,A looped function,A function with preserved scope,A database lock,A css class,1,40,
+2,mcq,React uses what syntax?,HTML,XML,JSX,JSON,2,40,
+2,mcq,GIT command to initializing repo?,git init,git start,git new,git create,0,40,
+2,mcq,Which method converts JSON to string?,JSON.parse(),JSON.stringify(),JSON.toText(),JSON.convert(),1,40,
+2,mcq,Which is not a JS framework/library?,Angular,Vue,React,Laravel,3,40,
+2,mcq,SQL Select statement usage?,Update data,Delete data,Retrieve data,Insert data,2,40,
+2,mcq,Which status code means 'Not Found'?,200,500,403,404,3,40,
+2,mcq,Docker is used for?, networking,containerization,monitoring,testing,1,40,
+2,mcq,Difference between == and ===?,Value only,Type only,Value and Type,None,2,40,
+2,mcq,What is 'this' in JS?,Global object,Current execution context,Function name,Variable,1,40,
+2,mcq,Python is interpreted or compiled?,Interpreted,Compiled,Both,None,0,40,
+3,code,What is the output?,11,2,NaN,Error,0,180,console.log(1 + "1");
+3,code,What does this print?,object,array,null,undefined,0,180,console.log(typeof null);
+3,code,Value of 'x' after execution?,10,20,undefined,Error,3,180,const x = 10; x = 20;
+3,code,Outcome of this update?,User updated,Error,No change,Deadlock,1,180,UPDATE users SET age = '20' WHERE id = 1; -- age is INT
+3,code,Which line causes an error?,1,2,3,4,2,180,1: let a = 1; 2: const b = 2; 3: b = 3; 4: console.log(a);

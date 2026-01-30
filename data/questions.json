@@ -1,1 +1,482 @@
-[]
+[
+  {
+    "id": "36bf13d3-82bf-4354-86fe-57941b1615fd",
+    "level": 1,
+    "type": "mcq",
+    "text": "What is 5 + 5?",
+    "timer": 30,
+    "options": [
+      "8",
+      "9",
+      "10",
+      "11"
+    ],
+    "correctAnswer": 2,
+    "codeSnippet": null,
+    "matchMap": null
+  },
+  {
+    "id": "b2977427-20e8-41cc-a25f-77a8b29f75cd",
+    "level": 1,
+    "type": "mcq",
+    "text": "What represents the structure of a web page?",
+    "timer": 30,
+    "options": [
+      "HTML",
+      "CSS",
+      "JS",
+      "SQL"
+    ],
+    "correctAnswer": 0,
+    "codeSnippet": null,
+    "matchMap": null
+  },
+  {
+    "id": "f8e0003e-a20e-4418-a104-9888930578a2",
+    "level": 1,
+    "type": "mcq",
+    "text": "Which tag is used for a link?",
+    "timer": 30,
+    "options": [
+      "<p>",
+      "<a>",
+      "<div>",
+      "<span>"
+    ],
+    "correctAnswer": 1,
+    "codeSnippet": null,
+    "matchMap": null
+  },
+  {
+    "id": "71cf7876-2589-470d-857e-7c33cd0f629d",
+    "level": 1,
+    "type": "mcq",
+    "text": "CSS stands for?",
+    "timer": 30,
+    "options": [
+      "Computer Style Sheet",
+      "Cascading Style Sheet",
+      "Creative Style System",
+      "Colorful Style Sheet"
+    ],
+    "correctAnswer": 1,
+    "codeSnippet": null,
+    "matchMap": null
+  },
+  {
+    "id": "c84389c5-d582-4959-9178-a33526d2abc4",
+    "level": 1,
+    "type": "mcq",
+    "text": "Which IS NOT a programming language?",
+    "timer": 30,
+    "options": [
+      "Python",
+      "Java",
+      "HTML",
+      "C++"
+    ],
+    "correctAnswer": 2,
+    "codeSnippet": null,
+    "matchMap": null
+  },
+  {
+    "id": "b0cf66bf-9e03-4f4d-95f1-59299f9a430f",
+    "level": 1,
+    "type": "mcq",
+    "text": "Which protocol is used for web pages?",
+    "timer": 30,
+    "options": [
+      "FTP",
+      "SMTP",
+      "HTTP",
+      "SSH"
+    ],
+    "correctAnswer": 2,
+    "codeSnippet": null,
+    "matchMap": null
+  },
+  {
+    "id": "3758d215-bfda-4d8f-987d-3ad1c1509429",
+    "level": 1,
+    "type": "mcq",
+    "text": "What is the binary of 1?",
+    "timer": 30,
+    "options": [
+      "0",
+      "1",
+      "10",
+      "11"
+    ],
+    "correctAnswer": 1,
+    "codeSnippet": null,
+    "matchMap": null
+  },
+  {
+    "id": "da30289d-4a90-4fdb-9f3c-8f28069b55a0",
+    "level": 1,
+    "type": "mcq",
+    "text": "A boolean has how many values?",
+    "timer": 30,
+    "options": [
+      "1",
+      "2",
+      "3",
+      "Infinite"
+    ],
+    "correctAnswer": 1,
+    "codeSnippet": null,
+    "matchMap": null
+  },
+  {
+    "id": "d60d5cd9-cd3c-4839-baf3-872a74a33f19",
+    "level": 1,
+    "type": "mcq",
+    "text": "Which bracket is used for arrays in JS?",
+    "timer": 30,
+    "options": [
+      "{}",
+      "[]",
+      "()",
+      "<>"
+    ],
+    "correctAnswer": 1,
+    "codeSnippet": null,
+    "matchMap": null
+  },
+  {
+    "id": "58853097-cb5c-4b96-9490-adb4bf872261",
+    "level": 1,
+    "type": "mcq",
+    "text": "Command to list files in Linux?",
+    "timer": 30,
+    "options": [
+      "cd",
+      "mv",
+      "ls",
+      "cp"
+    ],
+    "correctAnswer": 2,
+    "codeSnippet": null,
+    "matchMap": null
+  },
+  {
+    "id": "bb4efdfe-36ee-418a-a4f6-a03cfcdd900b",
+    "level": 2,
+    "type": "mcq",
+    "text": "Which is a NoSQL database?",
+    "timer": 40,
+    "options": [
+      "MySQL",
+      "PostgreSQL",
+      "MongoDB",
+      "SQLite"
+    ],
+    "correctAnswer": 2,
+    "codeSnippet": null,
+    "matchMap": null
+  },
+  {
+    "id": "e9e95a84-bee3-4220-bc17-7588f500c136",
+    "level": 2,
+    "type": "mcq",
+    "text": "Time complexity of binary search?",
+    "timer": 40,
+    "options": [
+      "O(n)",
+      "O(1)",
+      "O(log n)",
+      "O(n*n)"
+    ],
+    "correctAnswer": 2,
+    "codeSnippet": null,
+    "matchMap": null
+  },
+  {
+    "id": "12d79fa2-62be-4519-9fee-d530ff4296d5",
+    "level": 2,
+    "type": "mcq",
+    "text": "Keyword to declare a constant in JS?",
+    "timer": 40,
+    "options": [
+      "var",
+      "let",
+      "const",
+      "static"
+    ],
+    "correctAnswer": 2,
+    "codeSnippet": null,
+    "matchMap": null
+  },
+  {
+    "id": "5d65200a-b7d0-4804-a8c1-82aca823f049",
+    "level": 2,
+    "type": "mcq",
+    "text": "Default port for HTTP?",
+    "timer": 40,
+    "options": [
+      "80",
+      "443",
+      "21",
+      "22"
+    ],
+    "correctAnswer": 0,
+    "codeSnippet": null,
+    "matchMap": null
+  },
+  {
+    "id": "2d5f25e0-64a2-4a9e-9ed3-46796cce4731",
+    "level": 2,
+    "type": "mcq",
+    "text": "What is a closure?",
+    "timer": 40,
+    "options": [
+      "A looped function",
+      "A function with preserved scope",
+      "A database lock",
+      "A css class"
+    ],
+    "correctAnswer": 1,
+    "codeSnippet": null,
+    "matchMap": null
+  },
+  {
+    "id": "accb7ae2-49a0-4f05-bf59-631841ac02da",
+    "level": 2,
+    "type": "mcq",
+    "text": "React uses what syntax?",
+    "timer": 40,
+    "options": [
+      "HTML",
+      "XML",
+      "JSX",
+      "JSON"
+    ],
+    "correctAnswer": 2,
+    "codeSnippet": null,
+    "matchMap": null
+  },
+  {
+    "id": "f49db020-0926-4226-bcfb-6b0942808e71",
+    "level": 2,
+    "type": "mcq",
+    "text": "GIT command to initializing repo?",
+    "timer": 40,
+    "options": [
+      "git init",
+      "git start",
+      "git new",
+      "git create"
+    ],
+    "correctAnswer": 0,
+    "codeSnippet": null,
+    "matchMap": null
+  },
+  {
+    "id": "ac66403f-92a5-43b3-84df-f1b7ebdaf9b7",
+    "level": 2,
+    "type": "mcq",
+    "text": "Which method converts JSON to string?",
+    "timer": 40,
+    "options": [
+      "JSON.parse()",
+      "JSON.stringify()",
+      "JSON.toText()",
+      "JSON.convert()"
+    ],
+    "correctAnswer": 1,
+    "codeSnippet": null,
+    "matchMap": null
+  },
+  {
+    "id": "258f256e-2d5e-4fb9-b025-4fc85058f7cc",
+    "level": 2,
+    "type": "mcq",
+    "text": "Which is not a JS framework/library?",
+    "timer": 40,
+    "options": [
+      "Angular",
+      "Vue",
+      "React",
+      "Laravel"
+    ],
+    "correctAnswer": 3,
+    "codeSnippet": null,
+    "matchMap": null
+  },
+  {
+    "id": "0e8e922e-f8e6-4bb4-81c5-7ce16da39315",
+    "level": 2,
+    "type": "mcq",
+    "text": "SQL Select statement usage?",
+    "timer": 40,
+    "options": [
+      "Update data",
+      "Delete data",
+      "Retrieve data",
+      "Insert data"
+    ],
+    "correctAnswer": 2,
+    "codeSnippet": null,
+    "matchMap": null
+  },
+  {
+    "id": "a10d5713-9463-43f0-a612-3d40cd1b9fe9",
+    "level": 2,
+    "type": "mcq",
+    "text": "Which status code means 'Not Found'?",
+    "timer": 40,
+    "options": [
+      "200",
+      "500",
+      "403",
+      "404"
+    ],
+    "correctAnswer": 3,
+    "codeSnippet": null,
+    "matchMap": null
+  },
+  {
+    "id": "ca014197-d23e-4e00-b3d8-a87cd7fd351f",
+    "level": 2,
+    "type": "mcq",
+    "text": "Docker is used for?",
+    "timer": 40,
+    "options": [
+      " networking",
+      "containerization",
+      "monitoring",
+      "testing"
+    ],
+    "correctAnswer": 1,
+    "codeSnippet": null,
+    "matchMap": null
+  },
+  {
+    "id": "5d9124f7-690a-403e-a524-30128f8d91b9",
+    "level": 2,
+    "type": "mcq",
+    "text": "Difference between == and ===?",
+    "timer": 40,
+    "options": [
+      "Value only",
+      "Type only",
+      "Value and Type",
+      "None"
+    ],
+    "correctAnswer": 2,
+    "codeSnippet": null,
+    "matchMap": null
+  },
+  {
+    "id": "3029ce54-959c-45e2-b8c5-8d7750386abb",
+    "level": 2,
+    "type": "mcq",
+    "text": "What is 'this' in JS?",
+    "timer": 40,
+    "options": [
+      "Global object",
+      "Current execution context",
+      "Function name",
+      "Variable"
+    ],
+    "correctAnswer": 1,
+    "codeSnippet": null,
+    "matchMap": null
+  },
+  {
+    "id": "cc3ed628-9948-4879-a857-3e30e7301e8c",
+    "level": 2,
+    "type": "mcq",
+    "text": "Python is interpreted or compiled?",
+    "timer": 40,
+    "options": [
+      "Interpreted",
+      "Compiled",
+      "Both",
+      "None"
+    ],
+    "correctAnswer": 0,
+    "codeSnippet": null,
+    "matchMap": null
+  },
+  {
+    "id": "737d6570-453c-41e6-9e65-7dad644389a7",
+    "level": 3,
+    "type": "code",
+    "text": "What is the output?",
+    "timer": 180,
+    "options": [
+      "11",
+      "2",
+      "NaN",
+      "Error"
+    ],
+    "correctAnswer": 0,
+    "codeSnippet": "console.log(1 + \"1\");",
+    "matchMap": null
+  },
+  {
+    "id": "91d4428a-ee88-4e65-b06f-a3f44f32eb0a",
+    "level": 3,
+    "type": "code",
+    "text": "What does this print?",
+    "timer": 180,
+    "options": [
+      "object",
+      "array",
+      "null",
+      "undefined"
+    ],
+    "correctAnswer": 0,
+    "codeSnippet": "console.log(typeof null);",
+    "matchMap": null
+  },
+  {
+    "id": "093df991-6f41-4391-8dd0-649202ea5a54",
+    "level": 3,
+    "type": "code",
+    "text": "Value of 'x' after execution?",
+    "timer": 180,
+    "options": [
+      "10",
+      "20",
+      "undefined",
+      "Error"
+    ],
+    "correctAnswer": 3,
+    "codeSnippet": "const x = 10; x = 20;",
+    "matchMap": null
+  },
+  {
+    "id": "bdb1e675-e11d-4a47-98b9-0b420ec12e2f",
+    "level": 3,
+    "type": "code",
+    "text": "Outcome of this update?",
+    "timer": 180,
+    "options": [
+      "User updated",
+      "Error",
+      "No change",
+      "Deadlock"
+    ],
+    "correctAnswer": 1,
+    "codeSnippet": "UPDATE users SET age = '20' WHERE id = 1; -- age is INT",
+    "matchMap": null
+  },
+  {
+    "id": "96e93708-a6a1-499e-8241-66018d8e22b2",
+    "level": 3,
+    "type": "code",
+    "text": "Which line causes an error?",
+    "timer": 180,
+    "options": [
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "correctAnswer": 2,
+    "codeSnippet": "1: let a = 1; 2: const b = 2; 3: b = 3; 4: console.log(a);",
+    "matchMap": null
+  }
+]

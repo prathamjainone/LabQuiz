@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
 </head>
+
 <body>
     <!-- Join Screen -->
     <div id="joinScreen" class="screen active">
@@ -15,11 +17,13 @@
             <p class="subtitle">Enter your details to join</p>
             <div class="form-group">
                 <label for="fullNameInput">Full Name:</label>
-                <input type="text" id="fullNameInput" class="form-control" placeholder="Your Full Name" maxlength="50" autofocus>
+                <input type="text" id="fullNameInput" class="form-control" placeholder="Your Full Name" maxlength="50"
+                    autofocus>
             </div>
             <div class="form-group">
                 <label for="rollNumberInput">Roll Number:</label>
-                <input type="text" id="rollNumberInput" class="form-control" placeholder="Your Roll Number" maxlength="20">
+                <input type="text" id="rollNumberInput" class="form-control" placeholder="Your Roll Number"
+                    maxlength="20">
             </div>
             <button id="joinBtn" class="btn btn-primary btn-large">Join Game</button>
             <p id="errorMessage" class="error-message"></p>
@@ -35,28 +39,49 @@
         </div>
     </div>
 
-    <!-- Game Screen -->
+    <!-- Game Screen (Includes Sidebar) -->
     <div id="gameScreen" class="screen">
-        <div class="game-header">
-            <div class="question-info">
-                <span id="questionNumber">Question 1</span>
-            </div>
-            <div class="timer-container">
-                <div class="timer-bar">
-                    <div id="timerProgress" class="timer-progress"></div>
+        <div class="game-layout">
+            <!-- Sidebar -->
+            <aside id="rulesSidebar" class="rules-sidebar">
+                <div class="sidebar-header">
+                    <h3>Current Round</h3>
                 </div>
-                <span id="timerText">30s</span>
-            </div>
-        </div>
+                <div class="sidebar-content">
+                    <h2 id="roundTitle">Round 1</h2>
+                    <ul id="roundRules" class="rules-list">
+                        <!-- Rules injected here -->
+                    </ul>
+                    <div class="status-indicator">
+                        <span id="playerStatusBadge" class="badge">Active</span>
+                    </div>
+                </div>
+            </aside>
 
-        <div class="game-content">
-            <div id="questionContainer" class="question-container">
-                <!-- Question content will be injected here -->
-            </div>
-        </div>
+            <!-- Main Content -->
+            <main class="game-main">
+                <div class="game-header">
+                    <div class="question-info">
+                        <span id="questionNumber">Question 1</span>
+                    </div>
+                    <div class="timer-container">
+                        <div class="timer-bar">
+                            <div id="timerProgress" class="timer-progress"></div>
+                        </div>
+                        <span id="timerText">30s</span>
+                    </div>
+                </div>
 
-        <div class="game-footer">
-            <div id="answerStatus" class="answer-status"></div>
+                <div class="game-content">
+                    <div id="questionContainer" class="question-container">
+                        <!-- Question content will be injected here -->
+                    </div>
+                </div>
+
+                <div class="game-footer">
+                    <div id="answerStatus" class="answer-status"></div>
+                </div>
+            </main>
         </div>
     </div>
 
@@ -91,7 +116,9 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
     <script src="student.js"></script>
 </body>
+
 </html>

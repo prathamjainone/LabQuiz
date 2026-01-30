@@ -26,19 +26,24 @@ function setupEventListeners() {
     document.getElementById('uploadCsvBtn').addEventListener('click', uploadCSV);
     document.getElementById('questionType').addEventListener('change', handleQuestionTypeChange);
     document.getElementById('addQuestionBtn').addEventListener('click', addQuestion);
-    document.getElementById('startGameBtn').addEventListener('click', startGame);
+
+    // Round Buttons
+    document.getElementById('startRound1Btn').addEventListener('click', () => startRound(1));
+    document.getElementById('startRound2Btn').addEventListener('click', () => startRound(2));
+    document.getElementById('startRound3Btn').addEventListener('click', () => startRound(3));
+
     document.getElementById('nextQuestionBtn').addEventListener('click', nextQuestion);
     document.getElementById('forceStopBtn').addEventListener('click', forceStop);
     document.getElementById('downloadLeaderboardBtn').addEventListener('click', downloadLeaderboard);
     document.getElementById('adminLoginBtn').addEventListener('click', adminLogin);
-    
+
     // MCQ options
     document.getElementById('addLeftItem').addEventListener('click', () => addMatchItem('left'));
     document.getElementById('addRightItem').addEventListener('click', () => addMatchItem('right'));
-    
+
     // Update MCQ correct answer dropdown when options change
     document.getElementById('mcqOptions').addEventListener('input', updateMcqCorrectOptions);
-    
+
     // Event delegation for match input changes
     document.addEventListener('input', (e) => {
         if (e.target.classList.contains('match-input')) {
@@ -52,7 +57,7 @@ function setupSocketListeners() {
         currentQuestions = data.questions;
         displayQuestions();
         if (currentQuestions.length > 0) setStatus(`Loaded ${currentQuestions.length} question(s).`, 'success', 2500);
-        document.getElementById('startGameBtn').disabled = currentQuestions.length === 0;
+        updateStartButtons();
     });
 
     socket.on('admin:error', (data) => {
@@ -91,6 +96,13 @@ function setupSocketListeners() {
     });
 }
 
+function updateStartButtons() {
+    const hasQuestions = currentQuestions.length > 0;
+    document.getElementById('startRound1Btn').disabled = !hasQuestions;
+    document.getElementById('startRound2Btn').disabled = !hasQuestions;
+    document.getElementById('startRound3Btn').disabled = !hasQuestions;
+}
+
 function setStatus(message, type = 'info', autoHideMs = 0) {
     const bar = document.getElementById('adminStatusBar');
     bar.textContent = message;
@@ -119,7 +131,7 @@ function adminLogin() {
 async function uploadCSV() {
     const fileInput = document.getElementById('csvFile');
     const file = fileInput.files[0];
-    
+
     if (!file) {
         alert('Please select a CSV file');
         return;
@@ -140,7 +152,7 @@ async function uploadCSV() {
             body: formData
         });
         const data = await response.json();
-        
+
         if (data.success) {
             statusEl.textContent = `Success! Uploaded ${data.count} questions.`;
             statusEl.className = 'status-message success';
@@ -163,8 +175,8 @@ async function loadQuestions() {
         const response = await fetch('/api/questions');
         currentQuestions = await response.json();
         displayQuestions();
-        document.getElementById('startGameBtn').disabled = currentQuestions.length === 0;
-        
+        updateStartButtons();
+
         // Also load questions into server's game state
         if (isAdminAuthed && currentQuestions.length > 0) socket.emit('admin:load_questions');
     } catch (error) {
@@ -179,8 +191,8 @@ async function loadQuestionsSilent() {
         const response = await fetch('/api/questions');
         currentQuestions = await response.json();
         displayQuestions();
-        document.getElementById('startGameBtn').disabled = currentQuestions.length === 0;
-        
+        updateStartButtons();
+
         // Only load into server if there are questions
         if (isAdminAuthed && currentQuestions.length > 0) {
             socket.emit('admin:load_questions');
@@ -213,7 +225,7 @@ function updateMcqCorrectOptions() {
     const select = document.getElementById('mcqCorrect');
     const options = Array.from(document.querySelectorAll('#mcqOptions .option-input'))
         .map((input, index) => ({ value: index, text: input.value || `Option ${String.fromCharCode(65 + index)}` }));
-    
+
     select.innerHTML = '';
     options.forEach((opt, index) => {
         const option = document.createElement('option');
@@ -232,7 +244,7 @@ function addMatchItem(side) {
     input.className = 'match-input';
     input.placeholder = side === 'left' ? 'Left item' : 'Right item';
     input.addEventListener('input', updateMatchPairs);
-    
+
     const removeBtn = document.createElement('button');
     removeBtn.className = 'btn-remove-item';
     removeBtn.textContent = '×';
@@ -240,7 +252,7 @@ function addMatchItem(side) {
         div.remove();
         updateMatchPairs();
     });
-    
+
     div.appendChild(input);
     div.appendChild(removeBtn);
     container.appendChild(div);
@@ -253,9 +265,9 @@ function updateMatchPairs() {
     const leftItems = Array.from(document.querySelectorAll('#leftItems .match-input')).map(i => i.value).filter(v => v);
     const rightItems = Array.from(document.querySelectorAll('#rightItems .match-input')).map(i => i.value).filter(v => v);
     const container = document.getElementById('matchPairs');
-    
+
     container.innerHTML = '';
-    
+
     leftItems.forEach((left, leftIndex) => {
         if (!left) return;
         const div = document.createElement('div');
@@ -264,9 +276,9 @@ function updateMatchPairs() {
             <span>${left}</span>
             <select class="match-select" data-left-index="${leftIndex}">
                 <option value="">-- Select Match --</option>
-                ${rightItems.map((right, rightIndex) => 
-                    `<option value="${rightIndex}">${right}</option>`
-                ).join('')}
+                ${rightItems.map((right, rightIndex) =>
+            `<option value="${rightIndex}">${right}</option>`
+        ).join('')}
             </select>
         `;
         container.appendChild(div);
@@ -284,7 +296,9 @@ async function addQuestion() {
         return;
     }
 
+    // Default to Level 1 if added manually, or add field. For now default 1.
     let questionData = {
+        level: 1,
         type,
         text,
         timer
@@ -307,7 +321,7 @@ async function addQuestion() {
 
         questionData.options = options;
         questionData.correctAnswer = correctAnswer;
-        
+
         if (type === 'code') {
             const codeSnippet = document.getElementById('codeSnippet').value.trim();
             if (!codeSnippet) {
@@ -349,13 +363,13 @@ async function addQuestion() {
             body: JSON.stringify(questionData)
         });
         const question = await response.json();
-        
+
         currentQuestions.push(question);
         displayQuestions();
-        
+
         // Reset form
         document.getElementById('questionText').value = '';
-        document.getElementById('codeSnippet').value = '';
+        if (document.getElementById('codeSnippet')) document.getElementById('codeSnippet').value = '';
         document.getElementById('questionTimer').value = '30';
         document.querySelectorAll('.match-input').forEach(input => {
             const row = input.closest('.match-item-row');
@@ -366,8 +380,8 @@ async function addQuestion() {
             }
         });
         updateMatchPairs();
-        
-        setStatus('Question added.', 'success', 2000);
+
+        setStatus('Question added (Level 1 default).', 'success', 2000);
         // auto-sync server after adding (if authed)
         if (isAdminAuthed) socket.emit('admin:load_questions');
     } catch (error) {
@@ -385,7 +399,7 @@ function displayQuestions() {
 
     container.innerHTML = currentQuestions.map((q, index) => `
         <div class="question-card">
-            <h4>Question ${index + 1}: ${q.type.toUpperCase()}</h4>
+            <h4>#${index + 1} (L${q.level || 1}): ${q.type.toUpperCase()}</h4>
             <p>${q.text}</p>
             <p><small>Timer: ${q.timer}s</small></p>
         </div>
@@ -393,26 +407,22 @@ function displayQuestions() {
 }
 
 // Game Control
-function startGame() {
-    if (currentQuestions.length === 0) {
-        setStatus('No questions found. Upload CSV or add questions first.', 'error', 3500);
-        return;
-    }
+function startRound(round) {
     if (!isAdminAuthed) {
         setStatus('Admin locked. Please login first.', 'error', 3000);
         return;
     }
-    
+
     // Load questions into server (in case they weren't loaded yet)
     socket.emit('admin:load_questions');
-    
+
     // Small delay to ensure questions are loaded on server
     setTimeout(() => {
-        socket.emit('admin:start_game');
-        document.getElementById('startGameBtn').disabled = true;
+        socket.emit('admin:start_round', { round: round });
+        updateStartButtons(); // can also disable them
         document.getElementById('nextQuestionBtn').disabled = false;
         document.getElementById('forceStopBtn').disabled = false;
-        setStatus('Game started.', 'success', 2000);
+        setStatus(`Starting Round ${round}...`, 'success', 2000);
     }, 100);
 }
 
@@ -423,7 +433,6 @@ function nextQuestion() {
 function forceStop() {
     if (confirm('Are you sure you want to force stop the game?')) {
         socket.emit('admin:force_stop');
-        document.getElementById('startGameBtn').disabled = false;
         document.getElementById('nextQuestionBtn').disabled = true;
         document.getElementById('forceStopBtn').disabled = true;
         setStatus('Game stopped.', 'info', 2000);
@@ -431,10 +440,17 @@ function forceStop() {
 }
 
 function updateGameStatus(data) {
-    document.getElementById('statusText').textContent = data.status;
+    document.getElementById('statusText').textContent = `${data.status} (R${data.currentRound})`;
     document.getElementById('currentQuestion').textContent = data.currentQuestionIndex + 1;
     document.getElementById('totalQuestions').textContent = data.totalQuestions;
     document.getElementById('timeRemaining').textContent = data.timeRemaining;
+
+    const isPlaying = data.status === 'playing';
+    document.getElementById('startRound1Btn').disabled = isPlaying;
+    document.getElementById('startRound2Btn').disabled = isPlaying;
+    document.getElementById('startRound3Btn').disabled = isPlaying;
+    document.getElementById('nextQuestionBtn').disabled = !isPlaying;
+    document.getElementById('forceStopBtn').disabled = !isPlaying;
 }
 
 function updatePlayersList(players) {
@@ -443,12 +459,18 @@ function updatePlayersList(players) {
         container.innerHTML = '<p class="empty-state">No players joined yet</p>';
         return;
     }
-    container.innerHTML = players.map(p => `
+    container.innerHTML = players.map(p => {
+        const badgeClass = p.status === 'active' ? 'badge-success' : 'badge-danger';
+        const badgeText = p.status === 'active' ? 'Active' : (p.status === 'spectator' ? 'Spectator' : 'Eliminated');
+        return `
         <div class="player-item">
-            <span><strong>${p.name}</strong> (${p.rollNumber})</span>
+            <span>
+                <strong>${p.name}</strong> (${p.rollNumber})
+                <span class="badge ${badgeClass}" style="margin-left:5px; font-size:0.8em; padding:2px 5px; border-radius:4px; background:#444;">${badgeText}</span>
+            </span>
             <span class="score">Score: ${p.score}</span>
         </div>
-    `).join('');
+    `}).join('');
 }
 
 function updateLeaderboard(leaderboard) {

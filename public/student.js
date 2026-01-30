@@ -4,8 +4,10 @@ let hasAnswered = false;
 let timerInterval = null;
 let totalTime = 0;
 let timeRemaining = 0;
-let matchPairs = {}; // For match type questions
-let activeLeftItem = null; // For match type selection
+let matchPairs = {};
+let activeLeftItem = null;
+let currentRound = 1;
+let playerStatus = 'active'; // active, spectator, eliminated
 
 // Screen management
 function showScreen(screenId) {
@@ -15,7 +17,7 @@ function showScreen(screenId) {
     document.getElementById(screenId).classList.add('active');
 }
 
-// Join functionality - PRD compliant
+// Join functionality
 document.getElementById('joinBtn').addEventListener('click', () => {
     const name = document.getElementById('fullNameInput').value.trim();
     const rollNumber = document.getElementById('rollNumberInput').value.trim().toUpperCase();
@@ -47,53 +49,101 @@ function showError(message) {
     }, 5000);
 }
 
-// Socket Listeners - PRD compliant
+// Socket Listeners
 socket.on('login_ack', (data) => {
     if (data.success) {
-        showScreen('waitingScreen');
+        currentRound = data.round || 1;
+        playerStatus = data.status || 'active';
+        updateSidebar();
+
+        if (playerStatus === 'spectator' || playerStatus === 'eliminated') {
+            // If joining mid-game as spectator
+            showScreen('gameScreen');
+            updateStatusBadge();
+            document.getElementById('questionContainer').innerHTML = '<div class="waiting-text"><h3>Spectating Mode</h3><p>Waiting for next question...</p></div>';
+        } else {
+            showScreen('waitingScreen');
+        }
     } else {
         showError(data.msg);
     }
 });
 
+socket.on('round:started', (data) => {
+    currentRound = data.round;
+    updateSidebar();
+    // If we were waiting (active), now we wait for question
+    // If spectator, we just watch
+});
+
 socket.on('new_question', (question) => {
     currentQuestion = question;
     hasAnswered = false;
+    currentRound = question.round || currentRound;
     totalTime = question.duration || 30;
     timeRemaining = totalTime;
     matchPairs = {};
     activeLeftItem = null;
 
+    updateSidebar(); // Ensure round info matches
     showScreen('gameScreen');
     displayQuestion(question);
-    startTimer();
 
-    // Hide time up overlay if visible
-    document.getElementById('timeUpOverlay').style.display = 'none';
+    // Only start timer and enable inputs if ACTIVE
+    if (playerStatus === 'active') {
+        startTimer();
+        enableInputs();
+        // Hide time up overlay if visible
+        document.getElementById('timeUpOverlay').style.display = 'none';
+    } else {
+        // Spectator: Show question but disable inputs immediately
+        disableInputs();
+        document.getElementById('timerText').textContent = 'Spectating';
+        document.getElementById('timerProgress').style.width = '100%';
+        document.getElementById('timerProgress').style.background = '#6c757d';
+    }
 });
 
 socket.on('time_up', () => {
     clearTimer();
     showTimeUpOverlay();
+    disableInputs();
 
-    // Disable all inputs
-    document.querySelectorAll('button, input, select').forEach(el => {
-        el.disabled = true;
-    });
-
-    // Submit any pending match answer
-    if (currentQuestion && currentQuestion.type === 'match' && Object.keys(matchPairs).length > 0) {
+    // Submit any pending match answer if active
+    if (playerStatus === 'active' && currentQuestion && currentQuestion.type === 'match' && Object.keys(matchPairs).length > 0) {
         submitAnswer(matchPairs);
     }
 });
 
 socket.on('answer_result', (data) => {
-    // Show right/wrong + points after every question (no answer key shown)
+    // Show right/wrong + points
     const correct = !!data.correct;
     const points = Number.isFinite(data.points) ? data.points : 0;
-    document.getElementById('answerStatus').innerHTML = correct
-        ? `<p class="answer-confirmed">✓ Correct (+${points})</p>`
-        : `<p class="time-up">✗ Wrong (+${points})</p>`;
+    const sign = points >= 0 ? '+' : '';
+    const colorClass = correct ? 'answer-confirmed' : 'time-up';
+
+    let msg = correct ? '✓ Correct' : '✗ Wrong';
+    if (points !== 0) msg += ` (${sign}${points} pts)`;
+
+    // Bonus Feedback
+    let extraMsg = '';
+    if (data.speedBonus) extraMsg += '<br>⚡ SPEED BONUS!';
+    if (data.firstBlood) extraMsg += '<br>🩸 FIRST BLOOD!';
+    if (data.penalty) extraMsg += '<br>⚠️ NEGATIVE MARKING APPLIED';
+
+    document.getElementById('answerStatus').innerHTML = `<p class="${colorClass}">${msg}${extraMsg}</p>`;
+});
+
+socket.on('round:status', (data) => {
+    const { qualified, message, roundScore } = data;
+    // Show overlay or modal
+    if (!qualified) {
+        playerStatus = 'spectator';
+        alert(`❌ ROUND ENDED\n${message}\nYour Score: ${roundScore}`);
+    } else {
+        alert(`✅ ROUND ENDED\n${message}\nYour Score: ${roundScore}`);
+    }
+    updateStatusBadge();
 });
 
 socket.on('leaderboard_update', (leaderboard) => {
@@ -113,23 +163,59 @@ socket.on('game:stopped', () => {
     showScreen('waitingScreen');
 });
 
+// UI Updates
+function updateSidebar() {
+    document.getElementById('roundTitle').textContent = `Round ${currentRound}`;
+    const rulesList = document.getElementById('roundRules');
+    rulesList.innerHTML = '';
+
+    const rules = [
+        { label: 'Correct Answer', val: '+1 Point' }
+    ];
+
+    if (currentRound === 1) {
+        rules.push({ label: '⚡ Speed Bonus', val: '+2 Pts (First 5s)' });
+        rules.push({ label: '🎯 Target', val: '50% Score to Qualify' });
+    } else if (currentRound === 2) {
+        rules.push({ label: '🩸 First Blood', val: '+3 Pts (1st Global)' });
+        rules.push({ label: '🎯 Target', val: '50% Score to Qualify' });
+    } else if (currentRound === 3) {
+        rules.push({ label: '⚠️ Negative Marking', val: '-2 Pts for Wrong' });
+        rules.push({ label: '🏆 Goal', val: 'Highest Score Wins' });
+    }
+
+    rules.forEach(r => {
+        const li = document.createElement('li');
+        li.innerHTML = `<strong>${r.label}</strong>${r.val}`;
+        rulesList.appendChild(li);
+    });
+
+    updateStatusBadge();
+}
+
+function updateStatusBadge() {
+    const badge = document.getElementById('playerStatusBadge');
+    badge.textContent = playerStatus.toUpperCase();
+    badge.className = 'badge';
+    if (playerStatus === 'active') badge.classList.add('badge-success');
+    else if (playerStatus === 'spectator') badge.classList.add('badge-spectator');
+    else badge.classList.add('badge-danger');
+}
+
 // Question Display
 function displayQuestion(question) {
     const container = document.getElementById('questionContainer');
     container.innerHTML = '';
 
-    // Update question number
     if (question.currentQuestion && question.totalQuestions) {
         document.getElementById('questionNumber').textContent = `Question ${question.currentQuestion} of ${question.totalQuestions}`;
     }
 
-    // Question text
     const questionText = document.createElement('div');
     questionText.className = 'question-text';
     questionText.innerHTML = `<h3>${question.text}</h3>`;
     container.appendChild(questionText);
 
-    // Code snippet (for 'code' type)
     if (question.codeSnippet) {
         const codeBlock = document.createElement('div');
         codeBlock.className = 'code-block';
@@ -140,13 +226,9 @@ function displayQuestion(question) {
         pre.appendChild(code);
         codeBlock.appendChild(pre);
         container.appendChild(codeBlock);
-        // Trigger Prism highlighting
-        if (window.Prism) {
-            Prism.highlightElement(code);
-        }
+        if (window.Prism) Prism.highlightElement(code);
     }
 
-    // Answer interface based on type
     const answerContainer = document.createElement('div');
     answerContainer.className = 'answer-container';
 
@@ -157,37 +239,33 @@ function displayQuestion(question) {
     }
 
     container.appendChild(answerContainer);
-
-    // Reset answer status
     document.getElementById('answerStatus').innerHTML = '';
-
-    // Enable inputs
-    document.querySelectorAll('button, input, select').forEach(el => {
-        el.disabled = false;
-    });
 }
 
 function createMcqInterface(question) {
     const options = question.options || [];
     return options.map((option, index) => {
         const letter = String.fromCharCode(65 + index);
+        // Escape HTML tags to prevent invisible options (e.g. <a>, <p>)
+        const displayOpt = option.replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
         return `
             <button class="answer-btn mcq-btn" data-answer="${index}">
                 <span class="option-letter">${letter}</span>
-                <span class="option-text">${option}</span>
+                <span class="option-text">${displayOpt}</span>
             </button>
         `;
     }).join('');
 }
 
 function createMatchInterface(question) {
-    // Extract left and right items from matchMap
     const matchMap = question.matchMap || {};
     const leftItems = Object.keys(matchMap);
     const rightItems = Object.values(matchMap);
-
-    // Create unique right items list
-    const uniqueRightItems = [...new Set(rightItems)];
+    const uniqueRightItems = [...new Set(rightItems)]; // Show unique options? Or all? Usually scrambled.
+    // For simplicity, showing unique values if multiple left map to same right.
+    // Ideally right side should be shuffled.
 
     let html = '<div class="match-container">';
     html += '<div class="match-column"><h4>Left</h4>';
@@ -216,69 +294,62 @@ function createMatchInterface(question) {
     return html;
 }
 
+function disableInputs() {
+    document.querySelectorAll('button, input, select').forEach(el => {
+        el.disabled = true;
+    });
+}
+
+function enableInputs() {
+    document.querySelectorAll('button, input, select').forEach(el => {
+        el.disabled = false;
+    });
+}
+
 // Answer handling
 document.addEventListener('click', (e) => {
-    if (hasAnswered || !currentQuestion) return;
+    // Global check: if spectator or answered, ignore
+    if (playerStatus !== 'active' || hasAnswered || !currentQuestion) return;
 
     // MCQ/Code answer
     if (e.target.closest('.mcq-btn')) {
         const btn = e.target.closest('.mcq-btn');
         const answer = parseInt(btn.dataset.answer);
         submitAnswer(answer);
-        // Visual feedback
         document.querySelectorAll('.mcq-btn').forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
     }
 
-    // Match following - left item click
+    // Match logic (omitted details for brevity, assumed same as before but respecting disableInputs)
+    // Left item click
     if (e.target.closest('.match-item[data-side="left"]')) {
         const leftItem = e.target.closest('.match-item[data-side="left"]');
         const leftValue = leftItem.dataset.item;
-
-        // Remove previous selection for this left item
-        document.querySelectorAll('.match-item[data-side="right"]').forEach(item => {
-            item.classList.remove('selected');
-        });
-
-        // Highlight this left item
-        document.querySelectorAll('.match-item[data-side="left"]').forEach(item => {
-            item.classList.remove('active');
-        });
+        document.querySelectorAll('.match-item[data-side="right"]').forEach(item => item.classList.remove('selected'));
+        document.querySelectorAll('.match-item[data-side="left"]').forEach(item => item.classList.remove('active'));
         leftItem.classList.add('active');
         activeLeftItem = leftValue;
     }
 
-    // Match following - right item click (after left is selected)
+    // Right item click
     if (e.target.closest('.match-item[data-side="right"]')) {
         if (!activeLeftItem) return;
-
         const rightItem = e.target.closest('.match-item[data-side="right"]');
         const rightValue = rightItem.dataset.item;
 
-        // Update selected match display
         const selectedSpan = document.querySelector(`.match-selected[data-left-item="${activeLeftItem}"]`);
         selectedSpan.textContent = rightValue;
         selectedSpan.dataset.rightItem = rightValue;
-
-        // Store the pair
         matchPairs[activeLeftItem] = rightValue;
 
-        // Visual feedback with color coding
-        const colorIndex = Object.keys(matchPairs).length - 1;
-        const colors = ['#28a745', '#007acc', '#ffc107', '#dc3545', '#6f42c1', '#20c997'];
-        const color = colors[colorIndex % colors.length];
-        rightItem.style.borderColor = color;
-        rightItem.style.backgroundColor = color + '20';
-        document.querySelector(`.match-item[data-side="left"][data-item="${activeLeftItem}"]`).style.borderColor = color;
+        // Visuals
+        rightItem.style.backgroundColor = '#007acc20';
+        document.querySelector(`.match-item[data-side="left"][data-item="${activeLeftItem}"]`).style.borderColor = '#007acc';
 
-        // Reset active state
-        document.querySelectorAll('.match-item[data-side="left"]').forEach(item => {
-            item.classList.remove('active');
-        });
+        document.querySelectorAll('.match-item[data-side="left"]').forEach(item => item.classList.remove('active'));
         activeLeftItem = null;
     }
 
-    // Submit match
     if (e.target.closest('.submit-match')) {
         if (Object.keys(matchPairs).length === 0) {
             alert('Please create at least one match');
@@ -289,6 +360,7 @@ document.addEventListener('click', (e) => {
 });
 
 function submitAnswer(answerPayload) {
+    if (playerStatus !== 'active') return;
     if (hasAnswered) return;
 
     socket.emit('submit_answer', {
@@ -318,7 +390,6 @@ function updateTimer() {
     document.getElementById('timerProgress').style.width = `${progress}%`;
     document.getElementById('timerText').textContent = `${timeRemaining}s`;
 
-    // Color coding - gradient from green to red
     const progressBar = document.getElementById('timerProgress');
     if (progress < 20) {
         progressBar.style.background = 'linear-gradient(90deg, #dc3545, #c82333)';
@@ -337,23 +408,26 @@ function clearTimer() {
 }
 
 function showTimeUpOverlay() {
-    const overlay = document.getElementById('timeUpOverlay');
-    overlay.style.display = 'flex';
-    setTimeout(() => {
-        overlay.style.display = 'none';
-    }, 2000);
+    if (playerStatus === 'active') { // Only show time up loud if they were playing
+        const overlay = document.getElementById('timeUpOverlay');
+        overlay.style.display = 'flex';
+        setTimeout(() => {
+            overlay.style.display = 'none';
+        }, 2000);
+    }
 }
 
-// Leaderboard
+// Leaderboards
 function displayLeaderboard(leaderboard) {
     const container = document.getElementById('leaderboardList');
     container.innerHTML = leaderboard.map((entry, index) => {
         const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+        const statusBadge = entry.status === 'active' ? '' : ' <small style="color:red">(Eliminated)</small>';
         return `
             <div class="leaderboard-entry ${index < 3 ? 'top-three' : ''}">
                 <span class="rank">${medal} #${entry.rank}</span>
                 <span class="name">
-                    <strong>${entry.name}</strong>
+                    <strong>${entry.name}</strong>${statusBadge}
                     <span class="muted">(${entry.rollNumber || '-'})</span>
                 </span>
                 <span class="score">${entry.score} pts</span>
