@@ -1,6 +1,6 @@
 [
   {
-    "id": "3f0bc247-2a12-4ae3-8a60-66ce70f26a12",
+    "id": "beb6d526-ad07-45ed-879c-f8eddaa64ae6",
     "type": "mcq",
     "text": "What is the output of: cout << 5 + 3;",
     "timer": 30,
@@ -15,7 +15,7 @@
     "matchMap": null
   },
   {
-    "id": "790f568a-00d0-473d-a44c-f65799f500d0",
+    "id": "25a268c1-62e4-4ac1-9960-7dec95fa509e",
     "type": "mcq",
     "text": "Which data type is used to store whole numbers in C++?",
     "timer": 30,
@@ -30,7 +30,7 @@
     "matchMap": null
   },
   {
-    "id": "82ab50ab-b2ca-4e56-a7f6-dea97e149c44",
+    "id": "b3a38538-537d-471f-acd6-ae480988655f",
     "type": "code",
     "text": "What will be the output of this code?",
     "timer": 30,
@@ -45,7 +45,7 @@
     "matchMap": null
   },
   {
-    "id": "c103a246-6e20-4171-97d2-d9cf0058850d",
+    "id": "d87ecb8b-70a5-40a1-a4ed-d102abaab09a",
     "type": "mcq",
     "text": "What is the size of an int in C++ (typically)?",
     "timer": 30,
@@ -60,7 +60,7 @@
     "matchMap": null
   },
   {
-    "id": "e684a238-bd51-4d04-af3d-f387fe8878cf",
+    "id": "2c4b3095-babc-434e-a4ca-dafb36e58793",
     "type": "code",
     "text": "What will be printed?",
     "timer": 30,
