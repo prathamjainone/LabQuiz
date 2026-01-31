@@ -668,7 +668,27 @@ function broadcastLobbyUpdate() {
   io.emit('lobby:update', { players });
 }
 
-server.listen(PORT, () => {
-  console.log(`Tech Quest server running on http://localhost:${PORT}`);
-  console.log(`Admin dashboard: http://localhost:${PORT}/admin`);
+const { networkInterfaces } = require('os');
+
+function getLocalExternalIP() {
+  const nets = networkInterfaces();
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name]) {
+      // Skip over non-IPv4 and internal (i.e. 127.0.0.1) addresses
+      if (net.family === 'IPv4' && !net.internal) {
+        return net.address;
+      }
+    }
+  }
+  return 'localhost';
+}
+
+server.listen(PORT, '0.0.0.0', () => {
+  const lanIP = getLocalExternalIP();
+  console.log('---------------------------------------------------');
+  console.log(`Tech Quest server running!`);
+  console.log(`- Local:   http://localhost:${PORT}`);
+  console.log(`- Network: http://${lanIP}:${PORT} (Use this on other devices)`);
+  console.log(`- Admin:   http://localhost:${PORT}/admin`);
+  console.log('---------------------------------------------------');
 });

@@ -1,5 +1,5 @@
 {
-  "name": "labquiz",
+  "name": "techquest",
   "version": "1.0.0",
   "description": "LAN-Based Real-Time Assessment Platform",
   "main": "server.js",
