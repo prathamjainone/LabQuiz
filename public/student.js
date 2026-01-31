@@ -8,6 +8,7 @@ let matchPairs = {};
 let activeLeftItem = null;
 let currentRound = 1;
 let playerStatus = 'active'; // active, spectator, eliminated
+let myRollNumber = null;
 
 // Screen management
 function showScreen(screenId) {
@@ -32,6 +33,7 @@ document.getElementById('joinBtn').addEventListener('click', () => {
     }
 
     socket.emit('join_request', { name, rollNumber });
+    myRollNumber = rollNumber; // Store for local use
 });
 
 document.getElementById('rollNumberInput').addEventListener('keypress', (e) => {
@@ -50,11 +52,13 @@ function showError(message) {
 }
 
 // Socket Listeners
+// Socket Listeners
 socket.on('login_ack', (data) => {
     if (data.success) {
         currentRound = data.round || 1;
         playerStatus = data.status || 'active';
         updateSidebar();
+        updateScoreDisplay(data.score || 0);
 
         if (playerStatus === 'spectator' || playerStatus === 'eliminated') {
             // If joining mid-game as spectator
@@ -132,6 +136,11 @@ socket.on('answer_result', (data) => {
     if (data.penalty) extraMsg += '<br>⚠️ NEGATIVE MARKING APPLIED';
 
     document.getElementById('answerStatus').innerHTML = `<p class="${colorClass}">${msg}${extraMsg}</p>`;
+
+    // Update Score Badge
+    if (data.totalScore !== undefined) {
+        updateScoreDisplay(data.totalScore);
+    }
 });
 
 socket.on('round:status', (data) => {
@@ -200,6 +209,20 @@ function updateStatusBadge() {
     if (playerStatus === 'active') badge.classList.add('badge-success');
     else if (playerStatus === 'spectator') badge.classList.add('badge-spectator');
     else badge.classList.add('badge-danger');
+}
+
+function updateScoreDisplay(score) {
+    const el = document.getElementById('scoreDisplay');
+    if (el) {
+        el.textContent = `Score: ${score}`;
+    }
+}
+
+function updateRankDisplay(rank) {
+    const el = document.getElementById('rankDisplay');
+    if (el) {
+        el.textContent = `Rank: #${rank}`;
+    }
 }
 
 // Question Display
@@ -420,11 +443,20 @@ function showTimeUpOverlay() {
 // Leaderboards
 function displayLeaderboard(leaderboard) {
     const container = document.getElementById('leaderboardList');
+
+    // Find my rank
+    const myEntry = leaderboard.find(p => p.rollNumber === myRollNumber);
+    if (myEntry) {
+        updateRankDisplay(myEntry.rank);
+    }
+
     container.innerHTML = leaderboard.map((entry, index) => {
         const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
         const statusBadge = entry.status === 'active' ? '' : ' <small style="color:red">(Eliminated)</small>';
+        const isMe = entry.rollNumber === myRollNumber ? ' style="border: 1px solid #00fabc; background: rgba(0, 250, 188, 0.1);"' : '';
+
         return `
-            <div class="leaderboard-entry ${index < 3 ? 'top-three' : ''}">
+            <div class="leaderboard-entry ${index < 3 ? 'top-three' : ''}"${isMe}>
                 <span class="rank">${medal} #${entry.rank}</span>
                 <span class="name">
                     <strong>${entry.name}</strong>${statusBadge}

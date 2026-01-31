@@ -1,6 +1,6 @@
 [
   {
-    "id": "36bf13d3-82bf-4354-86fe-57941b1615fd",
+    "id": "d9c4a2c7-d5ae-4733-b2ad-a45e157d591c",
     "level": 1,
     "type": "mcq",
     "text": "What is 5 + 5?",
@@ -16,7 +16,7 @@
     "matchMap": null
   },
   {
-    "id": "b2977427-20e8-41cc-a25f-77a8b29f75cd",
+    "id": "fa311efe-3680-444e-a0a3-0d4100a1ffff",
     "level": 1,
     "type": "mcq",
     "text": "What represents the structure of a web page?",
@@ -32,7 +32,7 @@
     "matchMap": null
   },
   {
-    "id": "f8e0003e-a20e-4418-a104-9888930578a2",
+    "id": "b8588b86-dea6-4172-9917-e8b620e52e46",
     "level": 1,
     "type": "mcq",
     "text": "Which tag is used for a link?",
@@ -48,7 +48,7 @@
     "matchMap": null
   },
   {
-    "id": "71cf7876-2589-470d-857e-7c33cd0f629d",
+    "id": "44bc11d8-0786-4f9a-9aff-5c032c0b18c5",
     "level": 1,
     "type": "mcq",
     "text": "CSS stands for?",
@@ -64,7 +64,7 @@
     "matchMap": null
   },
   {
-    "id": "c84389c5-d582-4959-9178-a33526d2abc4",
+    "id": "2f11db63-18ee-4255-9f15-abbe3b1fe24f",
     "level": 1,
     "type": "mcq",
     "text": "Which IS NOT a programming language?",
@@ -80,7 +80,7 @@
     "matchMap": null
   },
   {
-    "id": "b0cf66bf-9e03-4f4d-95f1-59299f9a430f",
+    "id": "b73e9d41-1fe8-49ff-80ec-05446d458d5f",
     "level": 1,
     "type": "mcq",
     "text": "Which protocol is used for web pages?",
@@ -96,7 +96,7 @@
     "matchMap": null
   },
   {
-    "id": "3758d215-bfda-4d8f-987d-3ad1c1509429",
+    "id": "38bdc714-35e6-4b57-8ecb-18299eb0560c",
     "level": 1,
     "type": "mcq",
     "text": "What is the binary of 1?",
@@ -112,7 +112,7 @@
     "matchMap": null
   },
   {
-    "id": "da30289d-4a90-4fdb-9f3c-8f28069b55a0",
+    "id": "0a27a360-c486-47eb-9d3f-320cec0252f9",
     "level": 1,
     "type": "mcq",
     "text": "A boolean has how many values?",
@@ -128,7 +128,7 @@
     "matchMap": null
   },
   {
-    "id": "d60d5cd9-cd3c-4839-baf3-872a74a33f19",
+    "id": "31d40dca-8637-452e-bf8a-9cde7e73bff6",
     "level": 1,
     "type": "mcq",
     "text": "Which bracket is used for arrays in JS?",
@@ -144,7 +144,7 @@
     "matchMap": null
   },
   {
-    "id": "58853097-cb5c-4b96-9490-adb4bf872261",
+    "id": "7d3ddfec-fa4d-497f-98e1-f25d90d7c9af",
     "level": 1,
     "type": "mcq",
     "text": "Command to list files in Linux?",
@@ -160,7 +160,7 @@
     "matchMap": null
   },
   {
-    "id": "bb4efdfe-36ee-418a-a4f6-a03cfcdd900b",
+    "id": "046d1e33-79bf-43df-ad5c-a5eb9afabad0",
     "level": 2,
     "type": "mcq",
     "text": "Which is a NoSQL database?",
@@ -176,7 +176,7 @@
     "matchMap": null
   },
   {
-    "id": "e9e95a84-bee3-4220-bc17-7588f500c136",
+    "id": "5bee161f-cee5-42c0-8148-f2fbb1cc59f9",
     "level": 2,
     "type": "mcq",
     "text": "Time complexity of binary search?",
@@ -192,7 +192,7 @@
     "matchMap": null
   },
   {
-    "id": "12d79fa2-62be-4519-9fee-d530ff4296d5",
+    "id": "dded608b-b668-45e7-ab0d-55db1230d106",
     "level": 2,
     "type": "mcq",
     "text": "Keyword to declare a constant in JS?",
@@ -208,7 +208,7 @@
     "matchMap": null
   },
   {
-    "id": "5d65200a-b7d0-4804-a8c1-82aca823f049",
+    "id": "c2633d43-6c93-4e39-95ca-82994979f5f8",
     "level": 2,
     "type": "mcq",
     "text": "Default port for HTTP?",
@@ -224,7 +224,7 @@
     "matchMap": null
   },
   {
-    "id": "2d5f25e0-64a2-4a9e-9ed3-46796cce4731",
+    "id": "69525879-97b5-4543-aa33-a7e2125f7408",
     "level": 2,
     "type": "mcq",
     "text": "What is a closure?",
@@ -240,7 +240,7 @@
     "matchMap": null
   },
   {
-    "id": "accb7ae2-49a0-4f05-bf59-631841ac02da",
+    "id": "b4aa0e2c-e5aa-4667-a586-e2e97b5672f8",
     "level": 2,
     "type": "mcq",
     "text": "React uses what syntax?",
@@ -256,7 +256,7 @@
     "matchMap": null
   },
   {
-    "id": "f49db020-0926-4226-bcfb-6b0942808e71",
+    "id": "6bb46be8-fc56-47fc-8637-6bbc78827f8e",
     "level": 2,
     "type": "mcq",
     "text": "GIT command to initializing repo?",
@@ -272,7 +272,7 @@
     "matchMap": null
   },
   {
-    "id": "ac66403f-92a5-43b3-84df-f1b7ebdaf9b7",
+    "id": "98ed6205-b14c-4cc7-8c05-be6d318fb58d",
     "level": 2,
     "type": "mcq",
     "text": "Which method converts JSON to string?",
@@ -288,7 +288,7 @@
     "matchMap": null
   },
   {
-    "id": "258f256e-2d5e-4fb9-b025-4fc85058f7cc",
+    "id": "174ad96e-1481-4243-8ccc-dafaee2752b0",
     "level": 2,
     "type": "mcq",
     "text": "Which is not a JS framework/library?",
@@ -304,7 +304,7 @@
     "matchMap": null
   },
   {
-    "id": "0e8e922e-f8e6-4bb4-81c5-7ce16da39315",
+    "id": "bf67fd42-3263-40da-ac47-faff51a6ab30",
     "level": 2,
     "type": "mcq",
     "text": "SQL Select statement usage?",
@@ -320,7 +320,7 @@
     "matchMap": null
   },
   {
-    "id": "a10d5713-9463-43f0-a612-3d40cd1b9fe9",
+    "id": "2bdc293a-be99-4857-a3c5-e72fd4a01496",
     "level": 2,
     "type": "mcq",
     "text": "Which status code means 'Not Found'?",
@@ -336,7 +336,7 @@
     "matchMap": null
   },
   {
-    "id": "ca014197-d23e-4e00-b3d8-a87cd7fd351f",
+    "id": "da745e72-9aec-4f09-832e-32463f99bb23",
     "level": 2,
     "type": "mcq",
     "text": "Docker is used for?",
@@ -352,7 +352,7 @@
     "matchMap": null
   },
   {
-    "id": "5d9124f7-690a-403e-a524-30128f8d91b9",
+    "id": "6cde36e8-80b4-46b3-95f7-2b4a6f12b661",
     "level": 2,
     "type": "mcq",
     "text": "Difference between == and ===?",
@@ -368,7 +368,7 @@
     "matchMap": null
   },
   {
-    "id": "3029ce54-959c-45e2-b8c5-8d7750386abb",
+    "id": "4aac28fe-61eb-4f50-b9e2-0175529a25fb",
     "level": 2,
     "type": "mcq",
     "text": "What is 'this' in JS?",
@@ -384,7 +384,7 @@
     "matchMap": null
   },
   {
-    "id": "cc3ed628-9948-4879-a857-3e30e7301e8c",
+    "id": "865b9b9b-a893-4c4f-ad74-b748ed346613",
     "level": 2,
     "type": "mcq",
     "text": "Python is interpreted or compiled?",
@@ -400,7 +400,7 @@
     "matchMap": null
   },
   {
-    "id": "737d6570-453c-41e6-9e65-7dad644389a7",
+    "id": "ba194baa-5221-47d5-8864-4589cb2ffa0f",
     "level": 3,
     "type": "code",
     "text": "What is the output?",
@@ -416,7 +416,7 @@
     "matchMap": null
   },
   {
-    "id": "91d4428a-ee88-4e65-b06f-a3f44f32eb0a",
+    "id": "5b981898-5862-44d2-b500-eae91b33afde",
     "level": 3,
     "type": "code",
     "text": "What does this print?",
@@ -432,7 +432,7 @@
     "matchMap": null
   },
   {
-    "id": "093df991-6f41-4391-8dd0-649202ea5a54",
+    "id": "fe62d105-19fe-41fa-ad7d-74e660660ed7",
     "level": 3,
     "type": "code",
     "text": "Value of 'x' after execution?",
@@ -448,7 +448,7 @@
     "matchMap": null
   },
   {
-    "id": "bdb1e675-e11d-4a47-98b9-0b420ec12e2f",
+    "id": "6f84de83-f214-4a50-bbcd-14e9b5974ffc",
     "level": 3,
     "type": "code",
     "text": "Outcome of this update?",
@@ -464,7 +464,7 @@
     "matchMap": null
   },
   {
-    "id": "96e93708-a6a1-499e-8241-66018d8e22b2",
+    "id": "b68d2203-c264-4a8f-8353-0d1d64d79426",
     "level": 3,
     "type": "code",
     "text": "Which line causes an error?",

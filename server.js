@@ -493,7 +493,7 @@ function endQuestion() {
   gameState.lastLeaderboard = fullLeaderboard;
 
   setTimeout(() => {
-    io.emit('leaderboard_update', fullLeaderboard.slice(0, 5));
+    io.emit('leaderboard_update', fullLeaderboard);
   }, 3000);
 
   setTimeout(() => {
@@ -669,6 +669,6 @@ function broadcastLobbyUpdate() {
 }
 
 server.listen(PORT, () => {
-  console.log(`LabQuiz server running on http://localhost:${PORT}`);
+  console.log(`Tech Quest server running on http://localhost:${PORT}`);
   console.log(`Admin dashboard: http://localhost:${PORT}/admin`);
 });

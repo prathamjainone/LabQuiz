@@ -389,6 +389,15 @@ textarea.form-control {
     margin-top: 15px;
 }
 
+.leaderboard {
+    max-height: 500px;
+    overflow-y: auto;
+    padding-right: 5px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    /* Visual boundary */
+    border-radius: 6px;
+}
+
 .player-item,
 .leaderboard-entry {
     display: flex;
@@ -675,15 +684,48 @@ textarea.form-control {
 .final-container,
 .leaderboard-container {
     text-align: center;
-    padding: 40px;
+    padding: 20px;
     background: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(10px);
     border-radius: 20px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
     max-width: 500px;
-    width: 100%;
+    width: 90%;
     margin: auto;
     border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    max-height: 85vh;
+}
+
+.leaderboard-list {
+    overflow-y: auto;
+    flex-grow: 1;
+    margin-bottom: 10px;
+    padding-right: 5px;
+    /* For scrollbar space */
+    min-height: 0;
+    /* Critical for flex scrolling */
+}
+
+.score-badge {
+    margin-left: 15px;
+    background: #ffc107;
+    color: #000;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    box-shadow: 0 0 10px rgba(255, 193, 7, 0.4);
+}
+
+.rank-badge {
+    margin-left: 10px;
+    background: #00fabc;
+    color: #000;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    box-shadow: 0 0 10px rgba(0, 250, 188, 0.4);
 }
 
 /* Mobile Media Query */
